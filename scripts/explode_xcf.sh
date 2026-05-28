@@ -12,7 +12,12 @@ if ! which xcfinfo &> /dev/null; then
 fi
 
 if [ "$SRC" = "" -o "$DEST" = "" ]; then
-    echo "usage: $0 SRC DEST-PREFIX"
+    echo "usage: $0 SRC DEST"
+    exit 1
+fi
+
+if [ ! -d "$DEST" ]; then
+    echo "$DEST: not a directory"
     exit 1
 fi
 
@@ -22,6 +27,6 @@ COUNT=0
 IFS=$'\n'
 for LAYER in $LAYERS; do
     echo "Processing layer $COUNT - $LAYER"
-    xcf2png "$SRC" "$LAYER" -o "${DEST}${COUNT}.png"
+    xcf2png "$SRC" "$LAYER" -o "${DEST}/`basename ${SRC%.*}`-${COUNT}.png"
     COUNT=$((COUNT+1))
 done

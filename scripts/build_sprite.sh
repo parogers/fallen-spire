@@ -1,17 +1,25 @@
 #!/bin/bash
 
+SPRITE_DIR=$1
+
 if ! which spright &> /dev/null; then
     echo "ERROR: cannot find spright (see https://github.com/houmain/spright)"
     exit 1
 fi
 
-TMP=`mktemp -d`
-./scripts/explode_xcf.sh rawdata/sprites/hero-walk.xcf $TMP/hero-walk-
+if [ "$SPRITE_DIR" = "" ]; then
+    echo "usage: $0 SPRITE-DIR"
+    exit 1
+fi
 
-cp rawdata/sprites/hero.conf $TMP
+TMP=`mktemp -d`
+SPRITE_NAME=`basename $SPRITE_DIR`
+find $SPRITE_DIR -name *.xcf -exec ./scripts/explode_xcf.sh "{}" $TMP ";"
+
+cp $SPRITE_DIR/sprite.conf $TMP
 OLD=$PWD
 cd $TMP
-spright -i hero.conf
+spright -i sprite.conf
 
 cd $OLD
-cp $TMP/hero.json $TMP/hero.png .
+cp $TMP/${SPRITE_NAME}.json $TMP/${SPRITE_NAME}.png .
