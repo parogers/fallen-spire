@@ -14,7 +14,8 @@ fi
 
 TMP=`mktemp -d`
 SPRITE_NAME=`basename $SPRITE_DIR`
-find $SPRITE_DIR -name *.xcf -exec ./scripts/explode_xcf.sh "{}" $TMP ";"
+find $SPRITE_DIR -name '*.xcf' -exec ./scripts/explode_xcf.sh "{}" $TMP ";"
+./scripts/convert_alpha.py $TMP/*.png
 
 cp $SPRITE_DIR/sprite.conf $TMP
 OLD=$PWD
