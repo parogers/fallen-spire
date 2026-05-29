@@ -26,7 +26,7 @@ LAYERS=`xcfinfo $SRC |grep '\+'|cut -d "|" -f 2`
 COUNT=0
 IFS=$'\n'
 for LAYER in $LAYERS; do
-    echo "Processing layer $COUNT - $LAYER"
+    echo "Processing layer $COUNT - $SRC $LAYER"
     xcf2png "$SRC" "$LAYER" -o "${DEST}/`basename ${SRC%.*}`-${COUNT}.png"
     COUNT=$((COUNT+1))
 done

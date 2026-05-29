@@ -10,9 +10,9 @@ const playArea = ref();
 
 function tick(time)
 {
-    frame += 6*time.deltaMS/1000;
-    const frameNum = (frame|0) % 4;
-    sprite.texture = sheet.textures['hero-walk-' + frameNum];
+    frame += 2*time.deltaMS/1000;
+    const frameNum = (frame|0) % 2;
+    sprite.texture = sheet.textures['hero-jump-' + frameNum];
 }
 
 onMounted(async () => {
@@ -22,7 +22,7 @@ onMounted(async () => {
     sheet = await PIXI.Assets.load('/sprites/hero.json');
     sprite = new PIXI.Sprite(sheet.textures['hero-walk-0']);
     sprite.x = 10;
-    sprite.y = 10;
+    sprite.y = 9;
     app.stage.scale.set(4);
     app.stage.addChild(sprite);
 
