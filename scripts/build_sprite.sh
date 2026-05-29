@@ -23,4 +23,4 @@ cd $TMP
 spright -i sprite.conf
 
 cd $OLD
-cp $TMP/${SPRITE_NAME}.json $TMP/${SPRITE_NAME}.png .
+cp $TMP/${SPRITE_NAME}.json $TMP/${SPRITE_NAME}.png public/sprites/

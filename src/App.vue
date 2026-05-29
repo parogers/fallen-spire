@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import PlayArea from './PlayArea.vue'
 </script>
 
 <template>
-  <HelloWorld />
+    <PlayArea></PlayArea>
 </template>
