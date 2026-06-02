@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import * as PIXI from 'pixi.js';
+import { Grid } from '@parogers/pixijs-easygrid';
+
 import { loadTiledMap } from './tiled-parsing';
+import { Player } from './game/player';
 
 let sprite;
 let frame = 0;
 let app: Application|null = null;
 let sheet;
+let grid;
+let player;
 const playArea = ref();
 
 function tick(time)
 {
-    frame += 2*time.deltaMS/1000;
-    const frameNum = (frame|0) % 2;
-    sprite.texture = sheet.textures['hero-jump-' + frameNum];
+    const dt = time.deltaMS/1000;
+    // frame += 2*time.deltaMS/1000;
+    // const frameNum = (frame|0) % 2;
+    // sprite.texture = sheet.textures['hero-jump-' + frameNum];
+    player.update(dt);
+    grid.update(dt);
 }
 
 function makeSpritesheetFromGrid(tileset, tileNamePrefix) {
@@ -73,34 +81,50 @@ async function makeSpritesheetFromTileset(tileset) {
     const texture = await PIXI.Assets.load(tileset.source);
     const sheet = new PIXI.Spritesheet(texture, sheetData);
     await sheet.parse();
+    // TODO is there a better way of doing this?
+    // Manually update the cache
+    Object.keys(sheet.textures).forEach(name => {
+        PIXI.Assets.cache.set(name, sheet.textures[name]);
+    });
     return sheet;
 }
 
 onMounted(async () => {
     PIXI.TextureStyle.defaultOptions.scaleMode = 'nearest';
     app = new PIXI.Application();
-    await app.init({ background: '#1099bb', resizeTo: window });
-    sheet = await PIXI.Assets.load('/sprites/hero.json');
-    sprite = new PIXI.Sprite(sheet.textures['hero-walk-0']);
-    sprite.x = 10;
-    sprite.y = 9;
-    app.stage.scale.set(4);
-    app.stage.addChild(sprite);
-
-    const sprite2 = new PIXI.Sprite(sheet.textures['hero-idle-0']);
-    sprite2.x = 20;
-    sprite2.y = 10;
-    app.stage.addChild(sprite2);
+    await app.init({ background: '#000000', resizeTo: window });
 
     const map = await loadTiledMap('map.tmx');
-    for (let tilesetRef of map.tilesets) {
-        const sheet = await makeSpritesheetFromTileset(tilesetRef.data);
-        const tile = new PIXI.Sprite(sheet.textures['tiles.png-8']);
-        tile.x = 10;
-        tile.y = 50;
-        app.stage.addChild(tile);
-        console.log(sheet);
-    }
+    await makeSpritesheetFromTileset(map.tilesets[0].data);
+
+    await PIXI.Assets.load('/sprites/hero.json');
+
+    grid = new Grid({
+        // spritesheet: sheet2,
+        fixedViewport: false,
+        tileSize: 8,
+    });
+    grid.setTiles(map.layers[0].grid.map(row => {
+        return row.map(value => {
+            if (value === 0) {
+                return null;
+            }
+            return 'tiles.png-' + (value-1);
+        });
+    }))
+    // grid.x = 10;
+    // grid.y = 20;
+    grid.viewport.x = 0;
+    grid.viewport.y = 0;
+    // grid.viewport.width = 40;
+    // grid.viewport.height = 45;
+    app.stage.addChild(grid);
+    app.stage.scale.set(4);
+
+    player = new Player();
+    player.x = 20;
+    player.y = 48;
+    app.stage.addChild(player.sprite);
 
     playArea.value.appendChild(app.canvas);
     PIXI.Ticker.shared.add(tick);
@@ -109,6 +133,8 @@ onMounted(async () => {
 onUnmounted(() => {
     if (app) {
         PIXI.Ticker.shared.remove(tick);
+        // PIXI.Assets.unload();
+        PIXI.Assets.cache.reset();
         app.destroy();
         app = null;
     }

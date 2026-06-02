@@ -47,6 +47,7 @@ function parseTiledMap(text) {
     }
     const tilesets = [];
     const layers = [];
+    const layersByName = {};
     Array.from(map.children).forEach(child => {
         if (child.nodeName === 'tileset') {
             tilesets.push({
@@ -73,16 +74,19 @@ function parseTiledMap(text) {
                     properties: parseObjectProperties(data),
                 };
             });
-            layers.push({
+            const layer = {
                 name: child.getAttribute('name'),
                 objects: objects,
-            });
+            };
+            layers.push(layer);
+            layersByName[layer.name] = layer;
         }
     });
     return {
-        layers: layers,
-        tilesets: tilesets,
-    }
+        layersByName,
+        layers,
+        tilesets,
+    };
 }
 
 export async function loadTiledMap(src) {
