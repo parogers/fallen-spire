@@ -110,3 +110,69 @@ export async function loadTiledMap(src) {
     }
     return map;
 }
+
+
+export function makeSpritesheetFromGrid(tileset, tileNamePrefix) {
+    const tiles = {};
+    const rows = (tileset.tileCount / tileset.columns)|0 + 1;
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < tileset.columns; col++) {
+            const x = tileset.margin + tileset.spacing*col + tileset.tileWidth*col;
+            const y = tileset.margin + tileset.spacing*row + tileset.tileHeight*row;
+            const index = Object.keys(tiles).length;
+            if (index >= tileset.tileCount) {
+                break;
+            }
+            const name = tileNamePrefix + index;
+            tiles[name] = {
+                frame: {
+                    x: x,
+                    y: y,
+                    w: tileset.tileWidth,
+                    h: tileset.tileHeight,
+                },
+                spriteSourceSize: {
+                    x: x,
+                    y: y,
+                    w: tileset.tileWidth,
+                    h: tileset.tileHeight,
+                },
+                sourceSize: {
+                    w: tileset.tileWidth,
+                    h: tileset.tileHeight,
+                },
+                anchor: {
+                    x: 0,
+                    y: 0,
+                }
+            };
+        }
+    }
+    const sheet = {
+        frames: tiles,
+        meta: {
+            image: tileset.source,
+            format: 'RGBA8888',
+            size: {
+                w: tileset.sourceWidth,
+                h: tileset.sourceHeight,
+            },
+            scale: 1,
+        },
+    };
+    return sheet;
+}
+
+
+export async function makeSpritesheetFromTileset(tileset, tileNamePrefix) {
+    const sheetData = makeSpritesheetFromGrid(tileset, tileNamePrefix);
+    const texture = await PIXI.Assets.load(tileset.source);
+    const sheet = new PIXI.Spritesheet(texture, sheetData);
+    await sheet.parse();
+    // TODO is there a better way of doing this?
+    // Manually update the cache
+    Object.keys(sheet.textures).forEach(name => {
+        PIXI.Assets.cache.set(name, sheet.textures[name]);
+    });
+    return sheet;
+}
