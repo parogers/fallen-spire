@@ -1,7 +1,11 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Grid } from '@parogers/pixijs-easygrid';
+import {
+    Grid,
+    getHitMapFromTileSheet,
+    makeDiagonalHitMap,
+} from '@parogers/pixijs-easygrid';
 
 import { Thing } from './thing';
 
@@ -48,21 +52,25 @@ export class Level {
     }
 
     getSolidAt(x: number, y: number): boolean {
-        return this.grid.getTileInfoAt(x, y) !== null;
+        return this.grid.getSolidAt(x, y);
     }
 }
 
 
-export async function loadLevel(src: string)
+export async function loadLevel(renderer: PIXI.Renderer, src: string)
 {
     const map = await loadTiledMap(src);
     const tileset = map.tilesets[0].data;
     const tileNamePrefix = tileset.source + '-';
-    await makeSpritesheetFromTileset(tileset, tileNamePrefix);
+    const sheet = await makeSpritesheetFromTileset(tileset, tileNamePrefix);
 
+    const hitMap = getHitMapFromTileSheet(renderer, sheet);
+    hitMap.set('tiles.png-17', makeDiagonalHitMap('down', 'below'));
+    hitMap.set('tiles.png-18', makeDiagonalHitMap('up', 'below'));
     const grid = new Grid({
         fixedViewport: false,
         tileSize: 8,
+        hitMap: hitMap,
     });
     grid.setTiles(map.layers[0].grid.map(row => {
         return row.map(value => {

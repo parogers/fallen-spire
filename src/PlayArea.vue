@@ -32,7 +32,7 @@ onMounted(async () => {
     await app.init({ background: '#a0a0a0', resizeTo: window });
 
     await PIXI.Assets.load('/sprites/hero.json');
-    level = await loadLevel('map.tmx');
+    level = await loadLevel(app.renderer, 'map.tmx');
 
     controls = new KeyboardControls();
 
@@ -47,7 +47,7 @@ onMounted(async () => {
 
     const player = new Player(controls);
     player.level = level;
-    player.x = 10;
+    player.x = 110;
     player.y = 45;
     level.addThing(player);
 
