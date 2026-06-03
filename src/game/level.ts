@@ -46,6 +46,10 @@ export class Level {
             }
         });
     }
+
+    getSolidAt(x: number, y: number): boolean {
+        return this.grid.getTileInfoAt(x, y) !== null;
+    }
 }
 
 

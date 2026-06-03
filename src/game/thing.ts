@@ -18,4 +18,12 @@ export class Thing {
     get y(): number {
         return this.sprite.y;
     }
+
+    set facing(direction: number) {
+        this.sprite.scale.x = Math.sign(direction);
+    }
+
+    get facing(): number {
+        return Math.sign(this.sprite.scale.x);
+    }
 }
