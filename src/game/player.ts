@@ -81,18 +81,20 @@ export class Player extends Thing {
         this.lastState = null;
     }
 
-    update(dt: number) {
-        const findClosest = (x, y, velx, vely, dt=1) => {
-            for (let n = 0; n < 10; n++) {
-                if (!this.level.getSolidAt(x + velx*dt, y + vely*dt)) {
-                    x += velx*dt;
-                    y += vely*dt;
-                    break;
-                }
-                dt /= 2;
+    /* Moves this character as far as possible (ish) in the given direction
+     * until it hits an obstacle. */
+    moveFurthest(x: number, y: number, velx: number, vely: number, dt: number = 1) {
+        for (let n = 0; n < 10; n++) {
+            if (!this.level.getSolidAt(x + velx*dt, y + vely*dt)) {
+                this.x = x + velx*dt;
+                this.y = y + vely*dt;
+                break;
             }
-            return { x, y };
+            dt /= 2;
         }
+    }
+
+    update(dt: number) {
         const onGround = this.level.getSolidAt(this.x, this.y + 0.1);
         if (this.level.getSolidAt(this.x, this.y)) {
             console.warning('player stuck in ground')
@@ -103,7 +105,7 @@ export class Player extends Thing {
                 this.sprite.texture = this.idleFrame;
                 if (!onGround) {
                     this.vely += GRAVITY*dt;
-                    this.y = findClosest(this.x, this.y, 0, this.vely, dt).y;
+                    this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 } else {
                     this.vely = 0;
                     if (this.controls.dx) {
@@ -125,7 +127,7 @@ export class Player extends Thing {
                 this.velx = this.controls.dx*this.walkSpeed;
                 if (!onGround) {
                     if (this.level.getSolidAt(this.x, this.y+2)) {
-                        this.y = findClosest(this.x, this.y, 0, 2).y;
+                        this.moveFurthest(this.x, this.y, 0, 2);
                     } else {
                         this.vely += GRAVITY*dt;
                     }
@@ -135,13 +137,12 @@ export class Player extends Thing {
                 const nextx = this.x + this.velx*dt;
                 if (this.level.getSolidAt(nextx, this.y)) {
                     if (!this.level.getSolidAt(nextx, this.y-1)) {
-                        this.y = findClosest(nextx, this.y-2, 0, 2).y;
-                        this.x = nextx;
+                        this.moveFurthest(nextx, this.y-2, 0, 2);
                     }
                 } else {
                     this.x = nextx;
                 }
-                this.y = findClosest(this.x, this.y, 0, this.vely, dt).y;
+                this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 this.facing = this.controls.dx;
                 this.sprite.texture = this.walkAnim.update(dt);
                 if (this.controls.jump.pressed) {
@@ -161,37 +162,12 @@ export class Player extends Thing {
                     this.sprite.texture = this.jumpHorizontalFrame;
                 }
                 this.vely += GRAVITY*dt;
-                this.x = findClosest(this.x, this.y, this.velx, 0, dt).x;
-                this.y = findClosest(this.x, this.y, 0, this.vely, dt).y;
+                this.moveFurthest(this.x, this.y, this.velx, 0, dt);
+                this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 if (onGround && this.vely >= 0) {
                     this.state = PlayerState.Idle;
                 }
                 break;
-        }
-        return;
-
-        if (this.onGround && !this.jumping) {
-            if (this.controls.dx) {
-                this.facing = this.controls.dx;
-                this.sprite.texture = this.walkAnim.update(dt);
-                this.velx = this.walkSpeed * this.controls.dx;
-            } else {
-                this.sprite.texture = this.idleFrame;
-                this.velx = 0;
-            }
-        }
-        if (!this.onGround || this.jumping) {
-            this.jumping = false;
-            this.vely += GRAVITY*dt;
-            let dtt = dt;
-        }
-        if (!this.level.getSolidAt(this.x + this.velx*dt, this.y)) {
-            this.x += this.velx*dt;
-        }
-        if (this.controls.jump.pressed && this.onGround) {
-            this.velx = 50*this.facing;
-            this.vely = -125;
-            this.jumping = true;
         }
     }
 }
