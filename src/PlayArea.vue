@@ -12,6 +12,9 @@ import { KeyboardControls } from './game/controls';
 let app: Application|null = null;
 let level;
 let controls;
+
+const fpsCooldown = ref(0);
+const fps = ref(0);
 const playArea = ref();
 
 
@@ -23,6 +26,12 @@ function tick(time)
     // sprite.texture = sheet.textures['hero-jump-' + frameNum];
     controls.update(dt);
     level.update(dt);
+
+    fpsCooldown.value -= dt;
+    if (fpsCooldown.value <= 0) {
+        fps.value = Math.round(time.FPS);
+        fpsCooldown.value = 1;
+    }
 }
 
 
@@ -69,9 +78,17 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <div class="fps">{{ fps|0 }} FPS</div>
     <div ref="playArea">
     </div>
 </template>
 
 <style scoped>
+.fps {
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    color: white;
+    background: black;
+}
 </style>
