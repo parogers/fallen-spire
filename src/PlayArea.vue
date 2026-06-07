@@ -56,8 +56,8 @@ onMounted(async () => {
 
     const player = new Player(controls);
     player.level = level;
-    player.x = 110;
-    player.y = 45;
+    player.x = 190;
+    player.y = 70;
     level.addThing(player);
 
     playArea.value.appendChild(app.canvas);

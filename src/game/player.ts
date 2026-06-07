@@ -13,6 +13,8 @@ enum PlayerState {
     Idle='idle',
     Walking='walking',
     Jumping='jumping',
+    Hanging='hanging',
+    ClimbFromHanging='climb-from-hanging',
 }
 
 type AnimationParams = {
@@ -27,6 +29,10 @@ class Animation {
         this.fps = params.fps;
         this.looping = params.looping ?? true;
         this.frame = 0;
+    }
+
+    get isDone() {
+        return !this.looping && this.frame >= this.frames.length-1;
     }
 
     update(dt) {
@@ -52,6 +58,16 @@ export class Player extends Thing {
         super();
         this.sprite = new PIXI.Sprite();
         this.sprite.anchor.set(0.5, 14/15);
+        this.climbFromHangingAnim = new Animation({
+            frames: [
+                'hero-climb-from-hanging-0',
+                'hero-climb-from-hanging-1',
+                'hero-climb-from-hanging-2',
+                'hero-climb-from-hanging-3',
+            ],
+            fps: 4,
+            looping: false,
+        });
         this.walkAnim = new Animation({
             frames: [
                 'hero-walk-0',
@@ -72,7 +88,7 @@ export class Player extends Thing {
         this.idleFrame = PIXI.Assets.cache.get('hero-idle-0');
         this.jumpHorizontalFrame = PIXI.Assets.cache.get('hero-jump-horizontal-0');
         this.controls = controls;
-        this.jumpSpeed = 120;
+        this.jumpSpeed = 110;
         this.walkSpeed = 40;
         this.walkAnim.fps = WALK_FRAMES_PER_PIXEL * this.walkSpeed;
         this.velx = 0;
@@ -97,9 +113,9 @@ export class Player extends Thing {
     update(dt: number) {
         const onGround = this.level.getSolidAt(this.x, this.y + 0.1);
         if (this.level.getSolidAt(this.x, this.y)) {
-            console.warning('player stuck in ground')
+            console.warn('player stuck in ground')
         }
-        this.lastState = this.state;
+        const currentState = this.state;
         switch(this.state) {
             case PlayerState.Idle:
                 this.sprite.texture = this.idleFrame;
@@ -110,7 +126,7 @@ export class Player extends Thing {
                     this.vely = 0;
                     if (this.controls.dx) {
                         this.state = PlayerState.Walking;
-                    } else if (this.controls.jump.pressed) {
+                    } else if (this.controls.jump.pressed || this.controls.up.pressed) {
                         this.velx = 0;
                         this.vely = -this.jumpSpeed;
                         this.state = PlayerState.Jumping;
@@ -167,7 +183,45 @@ export class Player extends Thing {
                 if (onGround && this.vely >= 0) {
                     this.state = PlayerState.Idle;
                 }
+                if (!onGround && Math.abs(this.vely) < 20) {
+                    const hands = 16;
+                    if (
+                        !this.level.getFullSolidAt(this.x + this.facing*2, this.y - hands) &&
+                        !this.level.getFullSolidAt(this.x + 1, this.y - (hands-2)) &&
+                        this.level.getFullSolidAt(this.x + this.facing*2, this.y - hands/2)
+                    ) {
+                        this.state = PlayerState.Hanging;
+                        const cell = this.level.grid.getCellAt(this.x + this.facing*2, this.y-hands);
+                        this.y = cell.y + this.level.grid.tileSize.height + hands;
+                        this.x = cell.x + this.level.grid.tileSize.width;
+                    }
+                }
+                break;
+
+            case PlayerState.Hanging:
+                if (this.controls.down.pressed) {
+                    this.state = PlayerState.Idle;
+                } else if (this.controls.up.pressed) {
+                    this.state = PlayerState.ClimbFromHanging;
+                }
+                break;
+
+            case PlayerState.ClimbFromHanging:
+                if (this.state !== this.lastState) {
+                    this.climbFromHangingAnim.reset();
+                }
+                this.sprite.texture = this.climbFromHangingAnim.update(dt);
+                this.sprite.anchor.set(0.35, 1.4);
+                if (this.climbFromHangingAnim.isDone) {
+                    this.state = PlayerState.Idle;
+                    this.sprite.anchor.set(0.5, 14/15);
+                    this.sprite.y -= 17;
+                    this.sprite.x += this.facing*3;
+                    this.moveFurthest(this.x, this.y, 0, 2);
+                    this.sprite.texture = this.idleFrame;
+                }
                 break;
         }
+        this.lastState = currentState;
     }
 }
