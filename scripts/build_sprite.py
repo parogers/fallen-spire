@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import PIL
 import shutil
 import glob
@@ -14,7 +15,8 @@ from gimpformats.gimpXcfDocument import GimpDocument
 SPRITE_DEST = os.path.join('public', 'sprites')
 
 
-def extract_pivots(doc):
+def extract_pivots(src):
+    doc = GimpDocument(src)
     commentNode = next(p for p in doc.parasites if p.name == 'gimp-comment')
     comment = commentNode.data.decode('utf-8').replace('\00', '')
     parser = configparser.ConfigParser()
@@ -28,8 +30,8 @@ def extract_pivots(doc):
         if pivot.startswith('pivot'):
             frame_num = int(pivot[5:])
             x, y = value.split(',')
-            x = int(x.strip())
-            y = int(y.strip())
+            x = float(x.strip())
+            y = float(y.strip())
             pivots[frame_num] = (x, y)
     return pivots
 
@@ -51,14 +53,37 @@ def explode_xcf(src, dest):
         layer.image.save(os.path.join(dest, f'{fname}-{num}.png'))
 
 
+def update_pivots(src, pivots):
+    with open(src) as file:
+        json_data = json.load(file)
+    for sprite_name, sprite_data in json_data['frames'].items():
+        i = sprite_name.rindex('-')
+        assert i >= 0
+        base_name = sprite_name[0:i]
+        sprite_num = int(sprite_name[i+1:])
+        try:
+            px, py = pivots[base_name][sprite_num]
+        except KeyError:
+            pass
+        else:
+            sprite_data['anchor'] = {
+                'x' : px / sprite_data['sourceSize']['w'],
+                'y' : py / sprite_data['sourceSize']['h'],
+            }
+    with open(src, 'w') as file:
+        json.dump(json_data, file, indent=4)
+
+
 def process_sprite(src):
     assert os.path.exists(src)
     sprite_name = os.path.split(os.path.normpath(src))[-1]
     assert sprite_name, src
+    pivots = {}
     with tempfile.TemporaryDirectory() as dest:
-        # doc = GimpDocument(src)
-        # pivots = extract_pivots(doc)
         for xcf_src in glob.glob(os.path.join(src, '*.xcf')):
+            xcf_pivots = extract_pivots(xcf_src)
+            xcf_name = os.path.splitext(os.path.basename(xcf_src))[0]
+            pivots[xcf_name] = xcf_pivots or {}
             explode_xcf(xcf_src, dest)
 
         for png_src in glob.glob(os.path.join(dest, '*.png')):
@@ -77,6 +102,8 @@ def process_sprite(src):
             os.path.join(dest, sprite_name + '.conf'),
         ])
         os.chdir(old_dir)
+
+        update_pivots(os.path.join(dest, sprite_name + '.json'), pivots)
 
         shutil.copy(os.path.join(dest, sprite_name + '.json'), SPRITE_DEST)
         shutil.copy(os.path.join(dest, sprite_name + '.png'), SPRITE_DEST)

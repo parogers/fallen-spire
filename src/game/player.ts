@@ -31,20 +31,23 @@ class Animation {
         this.frame = 0;
     }
 
+    get frameInt(): number {
+        return this.frame|0;
+    }
+
     get isDone() {
-        return !this.looping && this.frame >= this.frames.length-1;
+        return !this.looping && (this.frame|0) >= this.frames.length;
     }
 
     update(dt) {
         this.frame += this.fps*dt;
-        let frameNum = Math.round(this.frame)|0;
+        let frameNum = this.frame|0;
         if (this.looping) {
             frameNum %= this.frames.length;
         } else {
             frameNum = Math.min(frameNum, this.frames.length-1);
         }
-        const name = this.frames[frameNum];
-        return PIXI.Assets.cache.get(name);
+        return this.frames[frameNum];
     }
 
     reset() {
@@ -57,7 +60,6 @@ export class Player extends Thing {
     constructor(controls: Controls) {
         super();
         this.sprite = new PIXI.Sprite();
-        this.sprite.anchor.set(0.5, 14/15);
         this.climbFromHangingAnim = new Animation({
             frames: [
                 'hero-climb-from-hanging-0',
@@ -65,7 +67,7 @@ export class Player extends Thing {
                 'hero-climb-from-hanging-2',
                 'hero-climb-from-hanging-3',
             ],
-            fps: 4,
+            fps: 5,
             looping: false,
         });
         this.walkAnim = new Animation({
@@ -82,11 +84,11 @@ export class Player extends Thing {
                 'hero-jump-vertical-0',
                 'hero-jump-vertical-1',
             ],
-            fps: 3,
+            fps: 5,
             looping: false,
         });
-        this.idleFrame = PIXI.Assets.cache.get('hero-idle-0');
-        this.jumpHorizontalFrame = PIXI.Assets.cache.get('hero-jump-horizontal-0');
+        this.idleFrame = 'hero-idle-0';
+        this.jumpHorizontalFrame = 'hero-jump-horizontal-0';
         this.controls = controls;
         this.jumpSpeed = 110;
         this.walkSpeed = 40;
@@ -95,6 +97,17 @@ export class Player extends Thing {
         this.vely = 0;
         this.state = PlayerState.Idle;
         this.lastState = null;
+        this._texture = null;
+        // const box = new PIXI.Graphics().rect(-0.5, -0.5, 1, 1).fill({ color: 'red' });
+        // this.sprite.addChild(box);
+    }
+
+    set texture(name: string) {
+        if (this._texture !== name) {
+            this._texture = name;
+            this.sprite.texture = PIXI.Assets.cache.get(name);
+            this.sprite.anchor = PIXI.Assets.cache.get('/sprites/hero.json').data['frames'][name].anchor;
+        }
     }
 
     /* Moves this character as far as possible (ish) in the given direction
@@ -118,7 +131,7 @@ export class Player extends Thing {
         const currentState = this.state;
         switch(this.state) {
             case PlayerState.Idle:
-                this.sprite.texture = this.idleFrame;
+                this.texture = this.idleFrame;
                 if (!onGround) {
                     this.vely += GRAVITY*dt;
                     this.moveFurthest(this.x, this.y, 0, this.vely, dt);
@@ -160,7 +173,7 @@ export class Player extends Thing {
                 }
                 this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 this.facing = this.controls.dx;
-                this.sprite.texture = this.walkAnim.update(dt);
+                this.texture = this.walkAnim.update(dt);
                 if (this.controls.jump.pressed) {
                     this.velx = this.facing * this.walkSpeed;
                     this.vely = -this.jumpSpeed;
@@ -170,12 +183,12 @@ export class Player extends Thing {
 
             case PlayerState.Jumping:
                 if (this.velx === 0) {
-                    this.sprite.texture = this.jumpVerticalAnim.update(dt);
-                    if (this.jumpVerticalAnim.frame < 0.5) {
+                    this.texture = this.jumpVerticalAnim.update(dt);
+                    if (this.jumpVerticalAnim.frame < 1) {
                         break;
                     }
                 } else {
-                    this.sprite.texture = this.jumpHorizontalFrame;
+                    this.texture = this.jumpHorizontalFrame;
                 }
                 this.vely += GRAVITY*dt;
                 this.moveFurthest(this.x, this.y, this.velx, 0, dt);
@@ -209,16 +222,26 @@ export class Player extends Thing {
             case PlayerState.ClimbFromHanging:
                 if (this.state !== this.lastState) {
                     this.climbFromHangingAnim.reset();
+                    this.y -= 11;
                 }
-                this.sprite.texture = this.climbFromHangingAnim.update(dt);
-                this.sprite.anchor.set(0.35, 1.4);
+                const lastFrame = this.climbFromHangingAnim.frameInt;
+                this.texture = this.climbFromHangingAnim.update(dt);
+                if (lastFrame !== this.climbFromHangingAnim.frameInt) {
+                    switch(this.climbFromHangingAnim.frameInt) {
+                        case 1:
+                            this.y -= 2;
+                            break;
+
+                        case 2:
+                            this.y -= 4;
+                            break;
+                    }
+                }
                 if (this.climbFromHangingAnim.isDone) {
                     this.state = PlayerState.Idle;
-                    this.sprite.anchor.set(0.5, 14/15);
-                    this.sprite.y -= 17;
                     this.sprite.x += this.facing*3;
                     this.moveFurthest(this.x, this.y, 0, 2);
-                    this.sprite.texture = this.idleFrame;
+                    this.texture = this.idleFrame;
                 }
                 break;
         }
