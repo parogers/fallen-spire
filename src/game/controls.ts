@@ -92,8 +92,9 @@ export class KeyboardControls extends Controls {
 
     attachListeners() {
         this.onKeyDown = event => {
+            const key = event.key.length > 1 ? event.key : event.key.toLowerCase();
             for (let mapping of KEY_MAPPING) {
-                if (mapping.key === event.key || mapping.alt === event.key) {
+                if (mapping.key === key || mapping.alt === key) {
                     this.controls[mapping.control].pressed = true;
                     event.preventDefault();
                     event.stopPropagation();
@@ -102,8 +103,9 @@ export class KeyboardControls extends Controls {
             }
         };
         this.onKeyUp = event => {
+            const key = event.key.length > 1 ? event.key : event.key.toLowerCase();
             for (let mapping of KEY_MAPPING) {
-                if (mapping.key === event.key || mapping.alt === event.key) {
+                if (mapping.key === key || mapping.alt === key) {
                     this.controls[mapping.control].released = true;
                     event.preventDefault();
                     event.stopPropagation();
