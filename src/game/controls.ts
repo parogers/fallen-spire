@@ -25,6 +25,11 @@ const KEY_MAPPING = [
         key: ' ',
         control: 'jump',
     },
+    {
+        key: 'z',
+        alt: 'Enter',
+        control: 'attack',
+    },
 ];
 
 
@@ -42,7 +47,12 @@ export class Controls {
         left: new ControlState(),
         right: new ControlState(),
         jump: new ControlState(),
+        attack: new ControlState(),
     };
+
+    get attack(): ControlState {
+        return this.controls.attack;
+    }
 
     get up(): ControlState {
         return this.controls.up;

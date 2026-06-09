@@ -25,6 +25,7 @@ export class Level {
 
     addThing(thing: Thing) {
         if (!this.things.has(thing)) {
+            thing.level = this;
             this.things.add(thing);
             if (thing.sprite) {
                 this.midground.addChild(thing.sprite);
@@ -36,7 +37,9 @@ export class Level {
     }
 
     removeThing(thing: Thing) {
+        thing.level = null;
         this.things.delete(thing);
+        this.updaters.delete(thing);
         if (thing.sprite) {
             this.midground.removeChild(thing.sprite);
         }

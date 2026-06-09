@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import collections
 import json
 import PIL
 import shutil
@@ -16,6 +17,12 @@ SPRITE_DEST = os.path.join('public', 'sprites')
 
 
 def extract_pivots(src):
+    def _parse_pivot(txt):
+        x, y = txt.split(',')
+        x = float(x.strip())
+        y = float(y.strip())
+        return x, y
+
     doc = GimpDocument(src)
     commentNode = next(p for p in doc.parasites if p.name == 'gimp-comment')
     comment = commentNode.data.decode('utf-8').replace('\00', '')
@@ -24,14 +31,22 @@ def extract_pivots(src):
         parser.read_string(comment)
     except configparser.MissingSectionHeaderError:
         return None
-    pivots = {}
-    for pivot in parser['pivots']:
-        value = parser['pivots'][pivot]
-        if pivot.startswith('pivot'):
-            frame_num = int(pivot[5:])
-            x, y = value.split(',')
-            x = float(x.strip())
-            y = float(y.strip())
+
+    default_pivot = None
+    try:
+        default_pivot = _parse_pivot(parser['pivots']['pivot'])
+    except:
+        default_pivot = None
+
+    if default_pivot:
+        pivots = collections.defaultdict(lambda : default_pivot)
+    else:
+        pivots = {}
+    for name in parser['pivots']:
+        value = parser['pivots'][name]
+        if name != 'pivot' and name.startswith('pivot'):
+            frame_num = int(name[5:])
+            x, y = _parse_pivot(value)
             pivots[frame_num] = (x, y)
     return pivots
 
@@ -56,6 +71,7 @@ def explode_xcf(src, dest):
 def update_pivots(src, pivots):
     with open(src) as file:
         json_data = json.load(file)
+
     for sprite_name, sprite_data in json_data['frames'].items():
         i = sprite_name.rindex('-')
         assert i >= 0
@@ -83,7 +99,7 @@ def process_sprite(src):
         for xcf_src in glob.glob(os.path.join(src, '*.xcf')):
             xcf_pivots = extract_pivots(xcf_src)
             xcf_name = os.path.splitext(os.path.basename(xcf_src))[0]
-            pivots[xcf_name] = xcf_pivots or {}
+            pivots[xcf_name] = xcf_pivots
             explode_xcf(xcf_src, dest)
 
         for png_src in glob.glob(os.path.join(dest, '*.png')):

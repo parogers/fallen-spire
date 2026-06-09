@@ -1,7 +1,9 @@
 
 
 export class Thing {
-    constructor() {}
+    constructor() {
+        this.level = null;
+    }
 
     set x(value: number) {
         this.sprite.x = value;
