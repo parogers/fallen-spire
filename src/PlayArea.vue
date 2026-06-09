@@ -4,10 +4,9 @@ import * as PIXI from 'pixi.js';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 import { Level, loadLevel } from './game/level';
-
 import { Player } from './game/player';
-
 import { KeyboardControls } from './game/controls';
+import { Loader } from './game/loader';
 
 let app: Application|null = null;
 let level;
@@ -40,7 +39,7 @@ onMounted(async () => {
     app = new PIXI.Application();
     await app.init({ background: '#a0a0a0', resizeTo: window });
 
-    await PIXI.Assets.load('/sprites/hero.json');
+    await Loader.load();
     level = await loadLevel(app.renderer, 'map.tmx');
 
     controls = new KeyboardControls();

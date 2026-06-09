@@ -1,4 +1,8 @@
 
+import * as PIXI from 'pixi.js';
+
+import { Loader } from './loader';
+
 
 export class Thing {
     constructor() {
@@ -27,5 +31,13 @@ export class Thing {
 
     get facing(): number {
         return Math.sign(this.sprite.scale.x);
+    }
+
+    set texture(name: string) {
+        if (this._texture !== name) {
+            this._texture = name;
+            this.sprite.texture = PIXI.Assets.cache.get(name);
+            this.sprite.anchor = Loader.shared.getAnchor(name);
+        }
     }
 }

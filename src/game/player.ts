@@ -2,8 +2,8 @@
 import * as PIXI from 'pixi.js';
 
 import { Thing } from './thing';
-
 import { Controls } from './controls';
+import { Animation, AnimationGroup } from './anim';
 
 
 const GRAVITY = 600;
@@ -15,109 +15,6 @@ enum PlayerState {
     Jumping='jumping',
     Hanging='hanging',
     ClimbFromHanging='climb-from-hanging',
-}
-
-type AnimationParams = {
-    frames: string[];
-    fps: number;
-    looping?: boolean;
-}
-
-
-class BaseAnimation {
-    constructor() {
-        this.frame = 0;
-    }
-
-    get frameInt(): number {
-        return this.frame|0;
-    }
-
-    get isDone() {
-        return false;
-    }
-
-    update(dt) {
-        return null;
-    }
-
-    reset() {
-        this.frame = 0;
-    }
-}
-
-
-class Animation extends BaseAnimation {
-    constructor(params: AnimationParams) {
-        super();
-        this.frames = params.frames;
-        this.fps = params.fps ?? 1;
-        this.looping = params.looping ?? true;
-        this.frame = 0;
-    }
-
-    get isDone() {
-        return !this.looping && (this.frame|0) >= this.frames.length;
-    }
-
-    update(dt) {
-        this.frame += this.fps*dt;
-        let frameNum = this.frame|0;
-        if (this.looping) {
-            frameNum %= this.frames.length;
-        } else {
-            frameNum = Math.min(frameNum, this.frames.length-1);
-        }
-        return this.frames[frameNum];
-    }
-}
-
-
-class AnimationGroup extends BaseAnimation {
-    constructor(anim1: Animation, anim2: Animation) {
-        super();
-        this.anim1 = anim1;
-        this.anim2 = anim2;
-        this.current = anim1;
-        this.state = false;
-    }
-
-    set state(value: boolean) {
-        this._state = value;
-        if (value) {
-            this.current = this.anim2;
-        } else {
-            this.current = this.anim1;
-        }
-    }
-
-    set fps(value: number) {
-        this.anim1.fps = value;
-        this.anim2.fps = value;
-    }
-
-    get fps(): number {
-        return this.current.fps;
-    }
-
-    get isDone(): boolean {
-        return this.current.isDone;
-    }
-
-    update(dt) {
-        const texture = this.current.update(dt);
-        if (this.current === this.anim1) {
-            this.anim2.frame = this.anim1.frame;
-        } else {
-            this.anim1.frame = this.anim2.frame;
-        }
-        return texture;
-    }
-
-    reset() {
-        this.anim1.frame = 0;
-        this.anim2.frame = 0;
-    }
 }
 
 
@@ -148,8 +45,7 @@ class Shot extends Thing {
             looping: false,
         });
         this.sprite = new PIXI.Sprite();
-        this.sprite.texture = PIXI.Assets.cache.get('effects-shot-0');
-        this.sprite.anchor = PIXI.Assets.cache.get('/sprites/hero.json').data['frames']['effects-shot-0'].anchor;
+        this.texture = 'effects-shot-0';
         this.facing = Math.sign(velx);
         this.velx = velx;
         this.state = ShotState.Flying;
@@ -158,7 +54,7 @@ class Shot extends Thing {
     update(dt) {
         switch(this.state) {
             case ShotState.Flying:
-                this.sprite.texture = PIXI.Assets.cache.get(this.flyAnim.update(dt));
+                this.texture = this.flyAnim.update(dt);
                 this.x += this.velx*dt;
                 if (this.level.getSolidAt(this.x, this.y)) {
                     this.state = ShotState.Exploding;
@@ -166,7 +62,7 @@ class Shot extends Thing {
                 break;
 
             case ShotState.Exploding:
-                this.sprite.texture = PIXI.Assets.cache.get(this.explodeAnim.update(dt));
+                this.texture = this.explodeAnim.update(dt);
                 if (this.explodeAnim.isDone) {
                     this.level.removeThing(this);
                 }
@@ -246,14 +142,6 @@ export class Player extends Thing {
         // TODO - kind of hacky
         this.walkAnimGroup.state = this.attacking;
         return this.walkAnimGroup;
-    }
-
-    set texture(name: string) {
-        if (this._texture !== name) {
-            this._texture = name;
-            this.sprite.texture = PIXI.Assets.cache.get(name);
-            this.sprite.anchor = PIXI.Assets.cache.get('/sprites/hero.json').data['frames'][name].anchor;
-        }
     }
 
     /* Moves this character as far as possible (ish) in the given direction
@@ -386,14 +274,10 @@ export class Player extends Thing {
                 const lastFrame = this.climbFromHangingAnim.frameInt;
                 this.texture = this.climbFromHangingAnim.update(dt);
                 if (lastFrame !== this.climbFromHangingAnim.frameInt) {
-                    switch(this.climbFromHangingAnim.frameInt) {
-                        case 1:
-                            this.y -= 2;
-                            break;
-
-                        case 2:
-                            this.y -= 4;
-                            break;
+                    if (this.climbFromHangingAnim.frameInt === 1) {
+                        this.y -= 2;
+                    } else if (this.climbFromHangingAnim.frameInt === 2) {
+                        this.y -= 4;
                     }
                 }
                 if (this.climbFromHangingAnim.isDone) {
