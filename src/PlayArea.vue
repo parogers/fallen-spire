@@ -19,7 +19,7 @@ const playArea = ref();
 
 function tick(time)
 {
-    const dt = time.deltaMS/1000;
+    const dt = Math.min(time.deltaMS/1000, 1/60.);
     // frame += 2*time.deltaMS/1000;
     // const frameNum = (frame|0) % 2;
     // sprite.texture = sheet.textures['hero-jump-' + frameNum];

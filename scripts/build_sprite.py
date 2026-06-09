@@ -30,7 +30,7 @@ def extract_pivots(src):
     try:
         parser.read_string(comment)
     except configparser.MissingSectionHeaderError:
-        return None
+        return {}
 
     default_pivot = None
     try:

@@ -36,8 +36,13 @@ export class Thing {
     set texture(name: string) {
         if (this._texture !== name) {
             this._texture = name;
+            const anchor = Loader.shared.getAnchor(name);
             this.sprite.texture = PIXI.Assets.cache.get(name);
-            this.sprite.anchor = Loader.shared.getAnchor(name);
+            if (anchor) {
+                this.sprite.anchor = anchor;
+            } else {
+                console.error('cannot find anchor for: ' + name);
+            }
         }
     }
 }

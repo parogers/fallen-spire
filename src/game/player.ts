@@ -5,7 +5,7 @@ import { Thing } from './thing';
 import { Controls } from './controls';
 import { Animation, AnimationGroup } from './anim';
 
-
+const DEFAULT_WALK_SPEED = 40;
 const GRAVITY = 600;
 const WALK_FRAMES_PER_PIXEL = 4/13;
 
@@ -86,26 +86,44 @@ export class Player extends Thing {
             fps: 5,
             looping: false,
         });
-        this.walkAnimGroup = new AnimationGroup(
-            new Animation({
+        this.walkAnimGroup = new AnimationGroup({
+            plain: new Animation({
                 frames: [
                     'hero-walk-0',
                     'hero-walk-1',
                     'hero-walk-2',
                     'hero-walk-3',
                 ],
-                fps: 5,
+                fps: WALK_FRAMES_PER_PIXEL*DEFAULT_WALK_SPEED,
             }),
-            new Animation({
+            gesture: new Animation({
                 frames: [
                     'hero-walk-gesture-0',
                     'hero-walk-gesture-1',
                     'hero-walk-gesture-2',
                     'hero-walk-gesture-3',
                 ],
-                fps: 5,
+                fps: WALK_FRAMES_PER_PIXEL*DEFAULT_WALK_SPEED,
             }),
-        )
+            crouch: new Animation({
+                frames: [
+                    'hero-crouch-walk-0',
+                    'hero-crouch-walk-1',
+                    'hero-crouch-walk-2',
+                    'hero-crouch-walk-3',
+                ],
+                fps: 4,
+            }),
+            'crouch-gesture': new Animation({
+                frames: [
+                    'hero-crouch-walk-gesture-0',
+                    'hero-crouch-walk-gesture-1',
+                    'hero-crouch-walk-gesture-2',
+                    'hero-crouch-walk-gesture-3',
+                ],
+                fps: 4,
+            }),
+        })
         this.jumpVerticalAnim = new Animation({
             frames: [
                 'hero-jump-vertical-0',
@@ -117,21 +135,37 @@ export class Player extends Thing {
         this.idlePlainFrame = 'hero-idle-0';
         this.idleGestureFrame = 'hero-idle-gesture-0';
         this.jumpHorizontalFrame = 'hero-jump-horizontal-0';
+        this.crouchPlainFrame = 'hero-crouch-0';
+        this.crouchGestureFrame = 'hero-crouch-gesture-0';
         this.controls = controls;
         this.jumpSpeed = 110;
-        this.walkSpeed = 40;
-        this.walkAnim.fps = WALK_FRAMES_PER_PIXEL * this.walkSpeed;
+        this.standWalkSpeed = DEFAULT_WALK_SPEED;
+        this.crouchWalkSpeed = 20;
         this.velx = 0;
         this.vely = 0;
         this.state = PlayerState.Idle;
         this.lastState = null;
         this.attacking = false;
+        this.crouching = false;
         this._texture = null;
         // const box = new PIXI.Graphics().rect(-0.5, -0.5, 1, 1).fill({ color: 'red' });
         // this.sprite.addChild(box);
     }
 
+    get walkSpeed(): number {
+        if (this.crouching) {
+            return this.crouchWalkSpeed;
+        }
+        return this.standWalkSpeed;
+    }
+
     get idleFrame(): string {
+        if (this.crouching) {
+            if (this.attacking) {
+                return this.crouchGestureFrame;
+            }
+            return this.crouchPlainFrame;
+        }
         if (this.attacking) {
             return this.idleGestureFrame;
         }
@@ -140,7 +174,11 @@ export class Player extends Thing {
 
     get walkAnim(): Animation {
         // TODO - kind of hacky
-        this.walkAnimGroup.state = this.attacking;
+        let state = 'plain';
+        if (this.attacking && this.crouching) state = 'crouch-gesture';
+        else if (this.attacking) state = 'gesture';
+        else if (this.crouching) state = 'crouch';
+        this.walkAnimGroup.state = state;
         return this.walkAnimGroup;
     }
 
@@ -170,6 +208,7 @@ export class Player extends Thing {
                 if (this.controls.attack.pressed) {
                     this.startAttack();
                 }
+                this.crouching = this.controls.down.held;
                 this.texture = this.idleFrame;
                 if (!onGround) {
                     this.vely += GRAVITY*dt;
@@ -217,6 +256,7 @@ export class Player extends Thing {
                 if (this.controls.attack.pressed) {
                     this.startAttack();
                 }
+                this.crouching = this.controls.down.held;
                 this.texture = this.walkAnim.update(dt);
                 if (this.controls.jump.pressed) {
                     this.velx = this.facing * this.walkSpeed;
@@ -294,7 +334,7 @@ export class Player extends Thing {
     startAttack() {
         const shot = new Shot(this.facing*100);
         shot.x = this.x + this.facing*6;
-        shot.y = this.y - 8;
+        shot.y = this.y - (this.crouching ? 4.5 : 8.5);
         this.level.addThing(shot);
         this.attacking = true;
     }

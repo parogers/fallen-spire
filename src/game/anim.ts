@@ -56,26 +56,24 @@ export class Animation extends BaseAnimation {
 
 
 export class AnimationGroup extends BaseAnimation {
-    constructor(anim1: Animation, anim2: Animation) {
+    constructor(mapping: { [name: string]: Animation }) {
         super();
-        this.anim1 = anim1;
-        this.anim2 = anim2;
-        this.current = anim1;
-        this.state = false;
+        this.animationMap = mapping;
+        this._state = Object.keys(mapping)[0];
+        this.current = Object.values(mapping)[0];
     }
 
     set state(value: boolean) {
         this._state = value;
-        if (value) {
-            this.current = this.anim2;
+        if (this.animationMap[value]) {
+            this.current = this.animationMap[value];
         } else {
-            this.current = this.anim1;
+            console.error('cannot find animation state:', value, 'in', Object.keys(this.animationMap));
         }
     }
 
     set fps(value: number) {
-        this.anim1.fps = value;
-        this.anim2.fps = value;
+        Object.values(this.animationMap).forEach(anim => anim.fps = value);
     }
 
     get fps(): number {
@@ -88,16 +86,12 @@ export class AnimationGroup extends BaseAnimation {
 
     update(dt) {
         const texture = this.current.update(dt);
-        if (this.current === this.anim1) {
-            this.anim2.frame = this.anim1.frame;
-        } else {
-            this.anim1.frame = this.anim2.frame;
-        }
+        const frame = this.current.frame;
+        Object.values(this.animationMap).forEach(anim => anim.frame = frame);
         return texture;
     }
 
     reset() {
-        this.anim1.frame = 0;
-        this.anim2.frame = 0;
+        Object.values(this.animationMap).forEach(anim => anim.frame = 0);
     }
 }
