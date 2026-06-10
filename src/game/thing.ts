@@ -9,6 +9,14 @@ export class Thing {
         this.level = null;
     }
 
+    set z(value: number) {
+        this.sprite.zIndex = value;
+    }
+
+    get z(): number {
+        return this.sprite.zIndex;
+    }
+
     set x(value: number) {
         this.sprite.x = value;
     }
@@ -44,5 +52,31 @@ export class Thing {
                 console.error('cannot find anchor for: ' + name);
             }
         }
+    }
+
+    getOnGround(): boolean {
+        return this.level.getSolidAt(this.x, this.y + 0.1);
+    }
+
+    /* Moves this character as far as possible (ish) in the given direction
+     * until it hits an obstacle. Returns true if the movement was unobstructed,
+     * and false otherwise. */
+    moveFurthest(x: number, y: number, velx: number, vely: number, dt: number = 1) {
+        for (let n = 0; n < 10; n++) {
+            if (!this.level.getSolidAt(x + velx*dt, y + vely*dt)) {
+                this.x = x + velx*dt;
+                this.y = y + vely*dt;
+                return n === 0;
+            }
+            dt /= 2;
+        }
+        return false;
+    }
+
+    getDistanceTo(other: Thing): number {
+        return Math.sqrt(
+            (other.x - this.x) ** 2 +
+            (other.y - this.y) ** 2
+        );
     }
 }

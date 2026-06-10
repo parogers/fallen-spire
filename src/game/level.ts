@@ -8,8 +8,11 @@ import {
 } from '@parogers/pixijs-easygrid';
 
 import { Thing } from './thing';
-
+import { Player } from './player';
 import { loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
+
+
+const GRAVITY = 600;
 
 
 export class Level {
@@ -21,6 +24,8 @@ export class Level {
         this.stage = new PIXI.Container();
         this.stage.addChild(grid);
         this.stage.addChild(this.midground);
+        this.gravity = GRAVITY;
+        this.player = null;
     }
 
     addThing(thing: Thing) {
@@ -34,6 +39,9 @@ export class Level {
         if (!this.updaters.has(thing) && thing.update) {
             this.updaters.add(thing);
         }
+        if (thing instanceof Player) {
+            this.player = thing;
+        }
     }
 
     removeThing(thing: Thing) {
@@ -42,6 +50,9 @@ export class Level {
         this.updaters.delete(thing);
         if (thing.sprite) {
             this.midground.removeChild(thing.sprite);
+        }
+        if (thing instanceof Player) {
+            this.player = null;
         }
     }
 

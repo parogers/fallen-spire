@@ -6,7 +6,6 @@ import { Controls } from './controls';
 import { Animation, AnimationGroup } from './anim';
 
 const DEFAULT_WALK_SPEED = 40;
-const GRAVITY = 600;
 const WALK_FRAMES_PER_PIXEL = 4/13;
 
 enum PlayerState {
@@ -59,6 +58,14 @@ class Shot extends Thing {
                 this.x += this.velx*dt;
                 if (this.level.getSolidAt(this.x, this.y)) {
                     this.state = ShotState.Exploding;
+                }
+                for (let thing of this.level.things) {
+                    if (thing.takeDamage && this.getDistanceTo(thing) < 5) {
+                        if (thing.takeDamage(1, this)) {
+                            this.state = ShotState.Exploding;
+                        }
+                        break;
+                    }
                 }
                 break;
 
@@ -183,21 +190,8 @@ export class Player extends Thing {
         return this.walkAnimGroup;
     }
 
-    /* Moves this character as far as possible (ish) in the given direction
-     * until it hits an obstacle. */
-    moveFurthest(x: number, y: number, velx: number, vely: number, dt: number = 1) {
-        for (let n = 0; n < 10; n++) {
-            if (!this.level.getSolidAt(x + velx*dt, y + vely*dt)) {
-                this.x = x + velx*dt;
-                this.y = y + vely*dt;
-                break;
-            }
-            dt /= 2;
-        }
-    }
-
     update(dt: number) {
-        const onGround = this.level.getSolidAt(this.x, this.y + 0.1);
+        const onGround = this.getOnGround();
         if (this.level.getSolidAt(this.x, this.y)) {
             console.warn('player stuck in ground');
         }
@@ -212,7 +206,7 @@ export class Player extends Thing {
                 this.crouching = this.controls.down.held;
                 this.texture = this.idleFrame;
                 if (!onGround) {
-                    this.vely += GRAVITY*dt;
+                    this.vely += this.level.gravity*dt;
                     this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 } else {
                     this.vely = 0;
@@ -243,7 +237,7 @@ export class Player extends Thing {
                     if (this.level.getSolidAt(this.x, this.y+2)) {
                         this.moveFurthest(this.x, this.y, 0, 2);
                     } else {
-                        this.vely += GRAVITY*dt;
+                        this.vely += this.level.gravity*dt;
                     }
                 } else {
                     this.vely = 0;
@@ -278,7 +272,7 @@ export class Player extends Thing {
                 if (this.controls.attack.pressed) {
                     this.startAttack();
                 }
-                this.vely += GRAVITY*dt;
+                this.vely += this.level.gravity*dt;
                 this.moveFurthest(this.x, this.y, this.velx, 0, dt);
                 this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 if (onGround && this.vely >= 0) {
@@ -295,7 +289,7 @@ export class Player extends Thing {
                 if (this.jumpVerticalAnim.frame < 1) {
                     break;
                 }
-                this.vely += GRAVITY*dt;
+                this.vely += this.level.gravity*dt;
                 this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 if (onGround && this.vely >= 0) {
                     this.vely = 0;

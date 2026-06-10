@@ -1,0 +1,158 @@
+{
+    "frames": {
+        "rat-dead-0": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 13,
+                "h": 6
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 1,
+                "w": 11,
+                "h": 4
+            },
+            "frame": {
+                "x": 13,
+                "y": 18,
+                "w": 11,
+                "h": 4
+            },
+            "anchor": {
+                "x": 0.5769230769230769,
+                "y": 0.8333333333333334
+            }
+        },
+        "rat-idle-0": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 9,
+                "h": 11
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 1,
+                "w": 7,
+                "h": 9
+            },
+            "frame": {
+                "x": 14,
+                "y": 1,
+                "w": 7,
+                "h": 9
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9090909090909091
+            }
+        },
+        "rat-walk-0": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 13,
+                "h": 8
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 2,
+                "w": 12,
+                "h": 5
+            },
+            "frame": {
+                "x": 1,
+                "y": 1,
+                "w": 12,
+                "h": 5
+            },
+            "anchor": {
+                "x": 0.5769230769230769,
+                "y": 0.875
+            }
+        },
+        "rat-walk-1": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 13,
+                "h": 8
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 1,
+                "w": 11,
+                "h": 6
+            },
+            "frame": {
+                "x": 13,
+                "y": 11,
+                "w": 11,
+                "h": 6
+            },
+            "anchor": {
+                "x": 0.5769230769230769,
+                "y": 0.875
+            }
+        },
+        "rat-walk-2": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 13,
+                "h": 8
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 0,
+                "w": 11,
+                "h": 7
+            },
+            "frame": {
+                "x": 1,
+                "y": 7,
+                "w": 11,
+                "h": 7
+            },
+            "anchor": {
+                "x": 0.5769230769230769,
+                "y": 0.875
+            }
+        },
+        "rat-walk-3": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 13,
+                "h": 8
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 1,
+                "w": 11,
+                "h": 6
+            },
+            "frame": {
+                "x": 1,
+                "y": 15,
+                "w": 11,
+                "h": 6
+            },
+            "anchor": {
+                "x": 0.5769230769230769,
+                "y": 0.875
+            }
+        }
+    },
+    "meta": {
+        "app": "https://github.com/houmain/spright",
+        "format": "RGBA8888",
+        "image": "monsters.png",
+        "size": {
+            "w": 25,
+            "h": 23
+        },
+        "scale": 1.0
+    }
+}

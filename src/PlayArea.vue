@@ -7,6 +7,7 @@ import { Level, loadLevel } from './game/level';
 import { Player } from './game/player';
 import { KeyboardControls } from './game/controls';
 import { Loader } from './game/loader';
+import { Rat } from './game/rat';
 
 let app: Application|null = null;
 let level;
@@ -58,6 +59,17 @@ onMounted(async () => {
     player.x = 190;
     player.y = 70;
     level.addThing(player);
+
+    const rat = new Rat();
+    rat.x = 140;
+    rat.y = 50;
+    level.addThing(rat);
+
+    const rat2 = new Rat();
+    rat2.x = 55;
+    rat2.y = 40;
+    rat2.facing = -1;
+    level.addThing(rat2);
 
     playArea.value.appendChild(app.canvas);
     PIXI.Ticker.shared.add(tick);
