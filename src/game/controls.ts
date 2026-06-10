@@ -88,6 +88,7 @@ export class KeyboardControls extends Controls {
     constructor() {
         super();
         this.attachListeners();
+        window.controls = this;
     }
 
     attachListeners() {
@@ -136,6 +137,7 @@ export class KeyboardControls extends Controls {
                     control.released = false;
                 }
                 control.held = false;
+                control.pressed = false;
             }
         }
     }
