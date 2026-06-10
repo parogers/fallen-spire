@@ -13,6 +13,7 @@ enum PlayerState {
     Idle='idle',
     Walking='walking',
     Jumping='jumping',
+    JumpingToClimb='jumping-to-climb',
     Hanging='hanging',
     ClimbFromHanging='climb-from-hanging',
 }
@@ -217,10 +218,14 @@ export class Player extends Thing {
                     this.vely = 0;
                     if (this.controls.dx) {
                         this.state = PlayerState.Walking;
-                    } else if (this.controls.jump.pressed || this.controls.up.pressed) {
+                    } else if (this.controls.jump.pressed) {
                         this.velx = 0;
                         this.vely = -this.jumpSpeed;
                         this.state = PlayerState.Jumping;
+                    } else if (this.controls.up.pressed) {
+                        this.velx = 0;
+                        this.vely = -this.jumpSpeed;
+                        this.state = PlayerState.JumpingToClimb;
                     }
                 }
                 break;
@@ -269,21 +274,35 @@ export class Player extends Thing {
                 if (isStateChanged) {
                     this.jumpVerticalAnim.reset();
                 }
-                if (this.velx === 0) {
-                    this.texture = this.jumpVerticalAnim.update(dt);
-                    if (this.jumpVerticalAnim.frame < 1) {
-                        break;
-                    }
-                } else {
-                    this.texture = this.jumpHorizontalFrame;
+                this.texture = this.jumpHorizontalFrame;
+                if (this.controls.attack.pressed) {
+                    this.startAttack();
                 }
                 this.vely += GRAVITY*dt;
                 this.moveFurthest(this.x, this.y, this.velx, 0, dt);
                 this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 if (onGround && this.vely >= 0) {
                     this.state = PlayerState.Idle;
+                    this.vely = 0;
                 }
-                if (!onGround && Math.abs(this.vely) < 20) {
+                break;
+
+            case PlayerState.JumpingToClimb:
+                if (isStateChanged) {
+                    this.jumpVerticalAnim.reset();
+                }
+                this.texture = this.jumpVerticalAnim.update(dt);
+                if (this.jumpVerticalAnim.frame < 1) {
+                    break;
+                }
+                this.vely += GRAVITY*dt;
+                this.moveFurthest(this.x, this.y, 0, this.vely, dt);
+                if (onGround && this.vely >= 0) {
+                    this.vely = 0;
+                    this.state = PlayerState.Idle;
+                    break;
+                }
+                if (Math.abs(this.vely) < 20) {
                     const hands = 16;
                     if (
                         !this.level.getFullSolidAt(this.x + this.facing*2, this.y - hands) &&
@@ -331,10 +350,20 @@ export class Player extends Thing {
         this.lastState = currentState;
     }
 
+    get handHeight(): number {
+        if (this.crouching) {
+            return 4.5;
+        }
+        if (this.state === PlayerState.Jumping) {
+            return 6.5;
+        }
+        return 8.5;
+    }
+
     startAttack() {
         const shot = new Shot(this.facing*100);
         shot.x = this.x + this.facing*6;
-        shot.y = this.y - (this.crouching ? 4.5 : 8.5);
+        shot.y = this.y - this.handHeight;
         this.level.addThing(shot);
         this.attacking = true;
     }
