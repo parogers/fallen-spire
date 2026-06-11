@@ -9,15 +9,17 @@ import {
 
 import { Thing } from './thing';
 import { Player } from './player';
-import { loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
+import { type Entity, loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
+import { Rat } from './rat';
 
 
 const GRAVITY = 600;
 
 
 export class Level {
-    constructor(grid: Grid) {
+    constructor(grid: Grid, entities: Entity[]) {
         this.grid = grid;
+        this.entities = entities;
         this.things = new Set<Thing>();
         this.updaters = new Set<Thing>();
         this.midground = new PIXI.Container();
@@ -26,6 +28,7 @@ export class Level {
         this.stage.addChild(this.midground);
         this.gravity = GRAVITY;
         this.player = null;
+        spawn(this);
     }
 
     addThing(thing: Thing) {
@@ -41,6 +44,7 @@ export class Level {
         }
         if (thing instanceof Player) {
             this.player = thing;
+            this.player.unstickPostSpawn();
         }
     }
 
@@ -72,6 +76,10 @@ export class Level {
     getFullSolidAt(x: number, y: number): boolean {
         return !!this.grid.getTileInfoAt(x, y);
     }
+
+    findEntity(name: string): Entity|null {
+        return this.entities.find(e => e.name === name) ?? null;
+    }
 }
 
 
@@ -90,6 +98,10 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
         tileSize: 8,
         hitMap: hitMap,
     });
+    const mapGrid = map.layers.find(layer => layer.name === 'grid');
+    if (!mapGrid) {
+        throw Error('cannot find grid in: ' + src);
+    }
     grid.setTiles(map.layers[0].grid.map(row => {
         return row.map(value => {
             if (value === 0) {
@@ -98,5 +110,24 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
             return tileNamePrefix + (value-1);
         });
     }));
-    return new Level(grid);
+    const mapEntityLayer = map.layers.find(layer => layer.name === 'entities') || [];
+    const entities = mapEntityLayer.objects;
+    return new Level(grid, entities);
+}
+
+
+export function spawn(level: Level)
+{
+    for (let entity of level.entities) {
+        if (entity.name === 'monster') {
+            if (entity.type === 'rat') {
+                const rat = new Rat();
+                rat.x = entity.x + entity.width/2;
+                rat.y = entity.y;
+                rat.facing = entity.facing;
+                level.addThing(rat);
+                rat.unstickPostSpawn();
+            }
+        }
+    }
 }

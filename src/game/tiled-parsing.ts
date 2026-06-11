@@ -2,6 +2,18 @@
 import * as PIXI from 'pixi.js';
 
 
+export type Entity = {
+    name: string;
+    type: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    facing: number;
+    properties: { [name: string]: any };
+}
+
+
 function parseTileset(text) {
     const data = new DOMParser().parseFromString(text, 'text/xml');
     const tileset = data.documentElement;
@@ -71,6 +83,7 @@ function parseTiledMap(text) {
                     y: +data.getAttribute('y'),
                     width: +data.getAttribute('width'),
                     height: +data.getAttribute('height'),
+                    facing: (+data.getAttribute('gid') & (2**31)) ? -1 : 1,
                     properties: parseObjectProperties(data),
                 };
             });

@@ -79,4 +79,23 @@ export class Thing {
             (other.y - this.y) ** 2
         );
     }
+
+    unstickPostSpawn()
+    {
+        const bigStep = 1;
+        const smallStep = 0.1;
+        for (let n = 0; n < 10; n++) {
+            if (!this.level.getSolidAt(this.x, this.y)) {
+                for (let m = 0; m < 10; m++) {
+                    if (this.level.getSolidAt(this.x, this.y + smallStep)) {
+                        break;
+                    }
+                    this.y += smallStep;
+                }
+                return;
+            }
+            this.y -= bigStep;
+        }
+        console.warn('cannot unstick thing at', this);
+    }
 }

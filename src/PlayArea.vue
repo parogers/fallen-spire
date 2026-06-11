@@ -54,22 +54,13 @@ onMounted(async () => {
     app.stage.addChild(level.stage);
     app.stage.scale.set(4);
 
+    const spawn = level.findEntity('spawn');
     const player = new Player(controls);
     player.level = level;
-    player.x = 190;
-    player.y = 70;
+    player.x = spawn.x + spawn.width/2;
+    player.y = spawn.y;
+    player.facing = spawn.facing;
     level.addThing(player);
-
-    const rat = new Rat();
-    rat.x = 140;
-    rat.y = 50;
-    level.addThing(rat);
-
-    const rat2 = new Rat();
-    rat2.x = 55;
-    rat2.y = 40;
-    rat2.facing = -1;
-    level.addThing(rat2);
 
     playArea.value.appendChild(app.canvas);
     PIXI.Ticker.shared.add(tick);
