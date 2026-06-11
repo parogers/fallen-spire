@@ -7,6 +7,8 @@ import { Loader } from './loader';
 export class Thing {
     constructor() {
         this.level = null;
+        this._onGroundDirty = true;
+        this._onGround = false;
     }
 
     set z(value: number) {
@@ -19,10 +21,12 @@ export class Thing {
 
     set x(value: number) {
         this.sprite.x = value;
+        this._onGroundDirty = true;
     }
 
     set y(value: number) {
         this.sprite.y = value;
+        this._onGroundDirty = true;
     }
 
     get x(): number {
@@ -54,8 +58,12 @@ export class Thing {
         }
     }
 
-    getOnGround(): boolean {
-        return this.level.getSolidAt(this.x, this.y + 0.1);
+    get onGround(): boolean {
+        if (this._onGroundDirty) {
+            this._onGround = this.level.getSolidAt(this.x, this.y + 0.1);
+            this._onGroundDirty = false;
+        }
+        return this._onGround;
     }
 
     /* Moves this character as far as possible (ish) in the given direction

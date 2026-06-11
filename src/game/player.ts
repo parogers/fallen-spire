@@ -191,7 +191,6 @@ export class Player extends Thing {
     }
 
     update(dt: number) {
-        const onGround = this.getOnGround();
         if (this.level.getSolidAt(this.x, this.y)) {
             console.warn('player stuck in ground');
         }
@@ -205,7 +204,7 @@ export class Player extends Thing {
                 }
                 this.crouching = this.controls.down.held;
                 this.texture = this.idleFrame;
-                if (!onGround) {
+                if (!this.onGround) {
                     this.vely += this.level.gravity*dt;
                     this.moveFurthest(this.x, this.y, 0, this.vely, dt);
                 } else {
@@ -233,7 +232,7 @@ export class Player extends Thing {
                     this.walkAnim.reset();
                 }
                 this.velx = this.controls.dx*this.walkSpeed;
-                if (!onGround) {
+                if (!this.onGround) {
                     if (this.level.getSolidAt(this.x, this.y+2)) {
                         this.moveFurthest(this.x, this.y, 0, 2);
                     } else {
@@ -275,7 +274,7 @@ export class Player extends Thing {
                 this.vely += this.level.gravity*dt;
                 this.moveFurthest(this.x, this.y, this.velx, 0, dt);
                 this.moveFurthest(this.x, this.y, 0, this.vely, dt);
-                if (onGround && this.vely >= 0) {
+                if (this.onGround && this.vely >= 0) {
                     this.state = PlayerState.Idle;
                     this.vely = 0;
                 }
@@ -291,7 +290,7 @@ export class Player extends Thing {
                 }
                 this.vely += this.level.gravity*dt;
                 this.moveFurthest(this.x, this.y, 0, this.vely, dt);
-                if (onGround && this.vely >= 0) {
+                if (this.onGround && this.vely >= 0) {
                     this.vely = 0;
                     this.state = PlayerState.Idle;
                     break;

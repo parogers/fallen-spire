@@ -36,7 +36,7 @@ export class Rat extends Thing {
     update(dt: number) {
         switch (this.state) {
             case RatState.Idle:
-                if (!this.getOnGround()) {
+                if (!this.onGround) {
                     this.vely += this.level.gravity*dt;
                     if (!this.moveFurthest(this.x, this.y, 0, this.vely, dt)) {
                         this.vely = 0;
@@ -63,6 +63,10 @@ export class Rat extends Thing {
 
             case RatState.Dead:
                 this.texture = this.deadFrame;
+                this.vely += this.level.gravity*dt;
+                if (!this.moveFurthest(this.x, this.y, 0, this.vely, dt)) {
+                    this.vely = 0;
+                }
                 break;
         }
     }
