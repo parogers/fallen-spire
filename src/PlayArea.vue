@@ -3,30 +3,16 @@ import * as PIXI from 'pixi.js';
 
 import { onMounted, onUnmounted, ref } from 'vue';
 
-import { Level, loadLevel } from './game/level';
-import { Player } from './game/player';
-import { KeyboardControls } from './game/controls';
-import { Loader } from './game/loader';
-import { Rat } from './game/rat';
+import { Game } from './game/game';
 
-let app: Application|null = null;
-let level;
-let controls;
-
+let game;
 const fpsCooldown = ref(0);
 const fps = ref(0);
 const playArea = ref();
 
 
-function tick(time)
-{
-    const dt = Math.min(time.deltaMS/1000, 1/60.);
-    // frame += 2*time.deltaMS/1000;
-    // const frameNum = (frame|0) % 2;
-    // sprite.texture = sheet.textures['hero-jump-' + frameNum];
-    controls.update(dt);
-    level.update(dt);
-
+function tick(time) {
+    const dt = time.deltaMS/1000;
     fpsCooldown.value -= dt;
     if (fpsCooldown.value <= 0) {
         fps.value = Math.round(time.FPS);
@@ -36,44 +22,16 @@ function tick(time)
 
 
 onMounted(async () => {
-    PIXI.TextureStyle.defaultOptions.scaleMode = 'nearest';
-    app = new PIXI.Application();
-    await app.init({ background: '#a0a0a0', resizeTo: window });
-
-    await Loader.load();
-    level = await loadLevel(app.renderer, 'map.tmx');
-
-    controls = new KeyboardControls();
-
-    // grid.x = 10;
-    // grid.y = 20;
-    level.grid.viewport.x = 0;
-    level.grid.viewport.y = 0;
-    // grid.viewport.width = 40;
-    // grid.viewport.height = 45;
-    app.stage.addChild(level.stage);
-    app.stage.scale.set(4);
-
-    const spawn = level.findEntity('spawn');
-    const player = new Player(controls);
-    player.level = level;
-    player.x = spawn.x + spawn.width/2;
-    player.y = spawn.y;
-    player.facing = spawn.facing;
-    level.addThing(player);
-
-    playArea.value.appendChild(app.canvas);
+    game = new Game();
+    await game.start();
+    playArea.value.appendChild(game.app.canvas);
     PIXI.Ticker.shared.add(tick);
 });
 
 onUnmounted(() => {
     if (app) {
-        controls.destroy();
+        game.destroy();
         PIXI.Ticker.shared.remove(tick);
-        // PIXI.Assets.unload();
-        PIXI.Assets.cache.reset();
-        app.destroy();
-        app = null;
     }
 });
 
