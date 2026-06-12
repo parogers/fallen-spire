@@ -11,6 +11,7 @@ import { Thing } from './thing';
 import { Player } from './player';
 import { type Entity, loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
 import { Rat } from './rat';
+import { Zombie } from './zombie';
 
 
 const GRAVITY = 600;
@@ -127,6 +128,15 @@ export function spawn(level: Level)
                 rat.facing = entity.facing;
                 level.addThing(rat);
                 rat.unstickPostSpawn();
+            } else if (entity.type === 'zombie') {
+                const m = new Zombie();
+                m.x = entity.x + entity.width/2;
+                m.y = entity.y;
+                m.facing = entity.facing;
+                level.addThing(m);
+                m.unstickPostSpawn();
+            } else {
+                console.warn('unknown monster type: ' + entity.type);
             }
         }
     }

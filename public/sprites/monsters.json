@@ -14,8 +14,8 @@
                 "h": 4
             },
             "frame": {
-                "x": 13,
-                "y": 18,
+                "x": 17,
+                "y": 31,
                 "w": 11,
                 "h": 4
             },
@@ -38,8 +38,8 @@
                 "h": 9
             },
             "frame": {
-                "x": 14,
-                "y": 1,
+                "x": 29,
+                "y": 15,
                 "w": 7,
                 "h": 9
             },
@@ -62,8 +62,8 @@
                 "h": 5
             },
             "frame": {
-                "x": 1,
-                "y": 1,
+                "x": 17,
+                "y": 25,
                 "w": 12,
                 "h": 5
             },
@@ -86,8 +86,8 @@
                 "h": 6
             },
             "frame": {
-                "x": 13,
-                "y": 11,
+                "x": 24,
+                "y": 1,
                 "w": 11,
                 "h": 6
             },
@@ -110,8 +110,8 @@
                 "h": 7
             },
             "frame": {
-                "x": 1,
-                "y": 7,
+                "x": 17,
+                "y": 17,
                 "w": 11,
                 "h": 7
             },
@@ -134,14 +134,158 @@
                 "h": 6
             },
             "frame": {
-                "x": 1,
-                "y": 15,
+                "x": 24,
+                "y": 8,
                 "w": 11,
                 "h": 6
             },
             "anchor": {
                 "x": 0.5769230769230769,
                 "y": 0.875
+            }
+        },
+        "zombie-dead-0": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 17,
+                "h": 14
+            },
+            "spriteSourceSize": {
+                "x": 2,
+                "y": 1,
+                "w": 7,
+                "h": 12
+            },
+            "frame": {
+                "x": 9,
+                "y": 17,
+                "w": 7,
+                "h": 12
+            },
+            "anchor": {
+                "x": 0.20588235294117646,
+                "y": 0.9285714285714286
+            }
+        },
+        "zombie-dead-1": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 17,
+                "h": 14
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 9,
+                "w": 15,
+                "h": 4
+            },
+            "frame": {
+                "x": 1,
+                "y": 31,
+                "w": 15,
+                "h": 4
+            },
+            "anchor": {
+                "x": 0.20588235294117646,
+                "y": 0.9285714285714286
+            }
+        },
+        "zombie-walk-0": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 11,
+                "h": 18
+            },
+            "spriteSourceSize": {
+                "x": 3,
+                "y": 2,
+                "w": 6,
+                "h": 15
+            },
+            "frame": {
+                "x": 17,
+                "y": 1,
+                "w": 6,
+                "h": 15
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9444444444444444
+            }
+        },
+        "zombie-walk-1": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 11,
+                "h": 18
+            },
+            "spriteSourceSize": {
+                "x": 2,
+                "y": 3,
+                "w": 7,
+                "h": 14
+            },
+            "frame": {
+                "x": 1,
+                "y": 1,
+                "w": 7,
+                "h": 14
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9444444444444444
+            }
+        },
+        "zombie-walk-2": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 11,
+                "h": 18
+            },
+            "spriteSourceSize": {
+                "x": 3,
+                "y": 2,
+                "w": 6,
+                "h": 15
+            },
+            "frame": {
+                "x": 9,
+                "y": 1,
+                "w": 6,
+                "h": 15
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9444444444444444
+            }
+        },
+        "zombie-walk-3": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 11,
+                "h": 18
+            },
+            "spriteSourceSize": {
+                "x": 2,
+                "y": 3,
+                "w": 7,
+                "h": 14
+            },
+            "frame": {
+                "x": 1,
+                "y": 16,
+                "w": 7,
+                "h": 14
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9444444444444444
             }
         }
     },
@@ -150,8 +294,8 @@
         "format": "RGBA8888",
         "image": "monsters.png",
         "size": {
-            "w": 25,
-            "h": 23
+            "w": 37,
+            "h": 36
         },
         "scale": 1.0
     }
