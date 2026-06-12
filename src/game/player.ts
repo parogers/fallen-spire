@@ -231,25 +231,7 @@ export class Player extends Thing {
                 if (isStateChanged) {
                     this.walkAnim.reset();
                 }
-                this.velx = this.controls.dx*this.walkSpeed;
-                if (!this.onGround) {
-                    if (this.level.getSolidAt(this.x, this.y+2)) {
-                        this.moveFurthest(this.x, this.y, 0, 2);
-                    } else {
-                        this.vely += this.level.gravity*dt;
-                    }
-                } else {
-                    this.vely = 0;
-                }
-                const nextx = this.x + this.velx*dt;
-                if (this.level.getSolidAt(nextx, this.y)) {
-                    if (!this.level.getSolidAt(nextx, this.y-1)) {
-                        this.moveFurthest(nextx, this.y-2, 0, 2);
-                    }
-                } else {
-                    this.x = nextx;
-                }
-                this.moveFurthest(this.x, this.y, 0, this.vely, dt);
+                this.moveAlongGround(this.controls.dx*this.walkSpeed, dt);
                 this.facing = this.controls.dx;
                 if (this.controls.attack.pressed) {
                     this.startAttack();

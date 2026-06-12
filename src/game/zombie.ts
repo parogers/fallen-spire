@@ -7,6 +7,7 @@ import { Animation } from './anim';
 
 enum ZombieState {
     Roaming='roaming',
+    Attacking='attacking',
     Dead='dead',
 }
 
@@ -29,6 +30,14 @@ export class Zombie extends Thing {
             ],
             fps: 4,
         });
+        this.attackAnim = new Animation({
+            frames: [
+                'zombie-attack-0',
+                'zombie-attack-1',
+            ],
+            fps: 4,
+            looping: false,
+        });
         this.deadAnim = new Animation({
             frames: [
                 'zombie-dead-0',
@@ -42,14 +51,22 @@ export class Zombie extends Thing {
     update(dt: number) {
         switch (this.state) {
             case ZombieState.Roaming:
+                if (this.getDistanceTo(this.level.player) < 8) {
+                    this.faceThing(this.level.player);
+                    this.attackAnim.reset();
+                    this.state = ZombieState.Attacking;
+                    break;
+                }
                 this.texture = this.walkAnim.update(dt);
-                this.velx = this.facing * 10;
-                if (!this.moveFurthest(this.x, this.y, this.velx, 0, dt)) {
+                if (!this.moveAlongGround(this.facing*10, dt)) {
                     this.facing *= -1;
                 }
-                this.vely += this.level.gravity*dt;
-                if (!this.moveFurthest(this.x, this.y, 0, this.vely, dt)) {
-                    this.vely = 0;
+                break;
+
+            case ZombieState.Attacking:
+                this.texture = this.attackAnim.update(dt);
+                if (this.attackAnim.isDone) {
+                    this.state = ZombieState.Roaming;
                 }
                 break;
 
