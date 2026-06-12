@@ -96,9 +96,13 @@ export class KeyboardControls extends Controls {
             const key = event.key.length > 1 ? event.key : event.key.toLowerCase();
             for (let mapping of KEY_MAPPING) {
                 if (mapping.key === key || mapping.alt === key) {
-                    this.controls[mapping.control].pressed = true;
                     event.preventDefault();
                     event.stopPropagation();
+                    if (event.repeat) {
+                        // Ignore repeating keys
+                        break;
+                    }
+                    this.controls[mapping.control].pressed = true;
                     break;
                 }
             }
