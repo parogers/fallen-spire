@@ -1,7 +1,7 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Thing } from './thing';
+import { Thing, makeHitBox } from './thing';
 import { Controls } from './controls';
 import { Animation, AnimationGroup } from './anim';
 
@@ -60,7 +60,11 @@ class Shot extends Thing {
                     this.state = ShotState.Exploding;
                 }
                 for (let thing of this.level.things) {
-                    if (thing.takeDamage && this.getDistanceTo(thing) < 5) {
+                    if (
+                        thing.takeDamage &&
+                        thing.combatHitBox &&
+                        thing.combatHitBox.contains(this.x - thing.x, this.y - thing.y)
+                    ) {
                         if (thing.takeDamage(1, this)) {
                             this.state = ShotState.Exploding;
                         }
@@ -156,6 +160,7 @@ export class Player extends Thing {
         this.attacking = false;
         this.crouching = false;
         this._texture = null;
+        this.combatHitBox = makeHitBox(6, 14);
         // const box = new PIXI.Graphics().rect(-0.5, -0.5, 1, 1).fill({ color: 'red' });
         // this.sprite.addChild(box);
     }

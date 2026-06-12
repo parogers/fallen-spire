@@ -4,6 +4,13 @@ import * as PIXI from 'pixi.js';
 import { Loader } from './loader';
 
 
+export function makeHitBox(width: number, height: number): PIXI.Rectangle {
+    const x = -width/2;
+    const y = -height;
+    return new PIXI.Rectangle(x, y, width, height);
+}
+
+
 export class Thing {
     constructor() {
         this.level = null;

@@ -1,7 +1,7 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Thing } from './thing';
+import { Thing, makeHitBox } from './thing';
 import { Animation } from './anim';
 
 
@@ -31,6 +31,7 @@ export class Rat extends Thing {
             ],
             fps: 15,
         });
+        this.combatHitBox = makeHitBox(5, 5);
     }
 
     update(dt: number) {

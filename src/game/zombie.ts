@@ -1,7 +1,7 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Thing } from './thing';
+import { Thing, makeHitBox } from './thing';
 import { Animation } from './anim';
 
 
@@ -46,6 +46,14 @@ export class Zombie extends Thing {
             fps: 2,
             looping: false,
         });
+        this.combatHitBox = makeHitBox(6, 14);
+        // const g = new PIXI.Graphics().rect(
+        //     this.combatHitBox.x,
+        //     this.combatHitBox.y,
+        //     this.combatHitBox.width,
+        //     this.combatHitBox.height,
+        // ).stroke({ color: 'red' })
+        // this.sprite.addChild(g);
     }
 
     update(dt: number) {
