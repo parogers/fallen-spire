@@ -142,4 +142,8 @@ export class Thing {
     faceThing(other: Thing) {
         this.facing = Math.sign(other.x - this.x);
     }
+
+    isFacingThing(other: Thing): boolean {
+        return this.facing === Math.sign(other.x - this.x);
+    }
 }

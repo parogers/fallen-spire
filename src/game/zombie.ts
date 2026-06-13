@@ -6,7 +6,9 @@ import { Animation } from './anim';
 
 
 enum ZombieState {
+    Idle='idle',
     Roaming='roaming',
+    ChasingPlayer='chasing-player',
     Attacking='attacking',
     Dead='dead',
 }
@@ -16,11 +18,10 @@ export class Zombie extends Thing {
     constructor() {
         super();
         this.sprite = new PIXI.Sprite();
-        this.idleFrame = 'zombie-walk-1';
-        this.texture = this.idleFrame;
         this.velx = 0;
         this.vely = 0;
         this.state = ZombieState.Roaming;
+        this.lastState = this.state;
         this.walkAnim = new Animation({
             frames: [
                 'zombie-walk-0',
@@ -47,6 +48,8 @@ export class Zombie extends Thing {
             looping: false,
         });
         this.combatHitBox = makeHitBox(6, 14);
+        this.timer = 0;
+        this.walkSpeed = 10;
         // const g = new PIXI.Graphics().rect(
         //     this.combatHitBox.x,
         //     this.combatHitBox.y,
@@ -58,7 +61,42 @@ export class Zombie extends Thing {
 
     update(dt: number) {
         switch (this.state) {
+            case ZombieState.Idle:
+                this.texture = this.walkAnim.update(0);
+                this.timer -= dt;
+                if (this.timer <= 0) {
+                    this.timer = 2 + Math.random()*3;
+                    this.state = ZombieState.Roaming;
+                    this.facing *= -1;
+                }
+                if (
+                    this.getDistanceTo(this.level.player) < 50 &&
+                    this.isFacingThing(this.level.player)
+                ) {
+                    this.state = ZombieState.ChasingPlayer;
+                }
+                break;
+
             case ZombieState.Roaming:
+                this.timer -= dt;
+                if (this.timer <= 0) {
+                    this.state = ZombieState.Idle;
+                    this.timer = 1 + Math.random()*4;
+                    break;
+                }
+                if (this.moveAlongGround(this.facing*this.walkSpeed, dt)) {
+                    this.texture = this.walkAnim.update(dt);
+                } else {
+                    this.timer = 5;
+                    this.state = ZombieState.Idle;
+                }
+                if (this.getDistanceTo(this.level.player) < 20) {
+                    this.state = ZombieState.ChasingPlayer;
+                    this.faceThing(this.level.player);
+                }
+                break;
+
+            case ZombieState.ChasingPlayer:
                 if (this.getDistanceTo(this.level.player) < 8) {
                     this.faceThing(this.level.player);
                     this.attackAnim.reset();
@@ -66,7 +104,7 @@ export class Zombie extends Thing {
                     break;
                 }
                 this.texture = this.walkAnim.update(dt);
-                if (!this.moveAlongGround(this.facing*10, dt)) {
+                if (!this.moveAlongGround(this.facing*this.walkSpeed, dt)) {
                     this.facing *= -1;
                 }
                 break;
@@ -74,24 +112,29 @@ export class Zombie extends Thing {
             case ZombieState.Attacking:
                 this.texture = this.attackAnim.update(dt);
                 if (this.attackAnim.isDone) {
-                    this.state = ZombieState.Roaming;
+                    this.state = ZombieState.ChasingPlayer;
                 }
                 break;
 
             case ZombieState.Dead:
-                this.texture = this.deadAnim.update(dt);
+                this.timer -= dt;
+                if (this.timer <= 0) {
+                    this.texture = this.deadAnim.update(dt);
+                }
                 this.vely += this.level.gravity*dt;
                 if (!this.moveFurthest(this.x, this.y, 0, this.vely, dt)) {
                     this.vely = 0;
                 }
                 break;
         }
+        this.lastState = this.state;
     }
 
     takeDamage(amount: number, source: Thing) {
         if (this.state === ZombieState.Dead) {
             return false;
         }
+        this.timer = 0.2;
         this.state = ZombieState.Dead;
         this.z = -1;
         return true;
