@@ -29,7 +29,7 @@ export class Zombie extends Thing {
                 'zombie-walk-2',
                 'zombie-walk-3',
             ],
-            fps: 4,
+            fps: 3.5,
         });
         this.attackAnim = new Animation({
             frames: [
@@ -49,7 +49,7 @@ export class Zombie extends Thing {
         });
         this.combatHitBox = makeHitBox(6, 14);
         this.timer = 0;
-        this.walkSpeed = 10;
+        this.baseWalkSpeed = 7;
         // const g = new PIXI.Graphics().rect(
         //     this.combatHitBox.x,
         //     this.combatHitBox.y,
@@ -57,6 +57,17 @@ export class Zombie extends Thing {
         //     this.combatHitBox.height,
         // ).stroke({ color: 'red' })
         // this.sprite.addChild(g);
+    }
+
+    get speedFactor(): number {
+        if (this.state === ZombieState.ChasingPlayer) {
+            return 2;
+        }
+        return 1;
+    }
+
+    get walkSpeed(): number {
+        return this.speedFactor*this.baseWalkSpeed;
     }
 
     update(dt: number) {
@@ -103,7 +114,19 @@ export class Zombie extends Thing {
                     this.state = ZombieState.Attacking;
                     break;
                 }
-                this.texture = this.walkAnim.update(dt);
+                if (this.getDistanceTo(this.level.player) > 50) {
+                    this.state = ZombieState.Idle;
+                    this.timer = 5;
+                    break;
+                }
+                if (!this.isFacingThing(this.level.player)) {
+                    this.timer -= dt;
+                    if (this.timer <= 0) {
+                        this.faceThing(this.level.player);
+                        this.timer = 1;
+                    }
+                }
+                this.texture = this.walkAnim.update(dt*this.speedFactor);
                 if (!this.moveAlongGround(this.facing*this.walkSpeed, dt)) {
                     this.facing *= -1;
                 }
