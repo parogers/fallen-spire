@@ -26,8 +26,8 @@
 </data>
  </layer>
  <objectgroup id="5" name="entities">
-  <object id="4" name="monster" type="zombie" gid="14" x="96.1818" y="48" width="8" height="8"/>
-  <object id="5" name="monster" type="rat" gid="2147483662" x="159.818" y="39.5455" width="8" height="8"/>
+  <object id="4" name="zombie" type="monster" gid="14" x="96.1818" y="48" width="8" height="8"/>
+  <object id="5" name="rat" type="monster" gid="2147483662" x="159.818" y="39.5455" width="8" height="8"/>
   <object id="6" name="spawn" gid="2147483662" x="208.182" y="65.0909" width="8" height="8"/>
  </objectgroup>
 </map>

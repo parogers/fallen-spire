@@ -120,15 +120,15 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
 export function spawn(level: Level)
 {
     for (let entity of level.entities) {
-        if (entity.name === 'monster') {
-            if (entity.type === 'rat') {
+        if (entity.type === 'monster') {
+            if (entity.name === 'rat') {
                 const rat = new Rat();
                 rat.x = entity.x + entity.width/2;
                 rat.y = entity.y;
                 rat.facing = entity.facing;
                 level.addThing(rat);
                 rat.unstickPostSpawn();
-            } else if (entity.type === 'zombie') {
+            } else if (entity.name === 'zombie') {
                 const m = new Zombie();
                 m.x = entity.x + entity.width/2;
                 m.y = entity.y;
