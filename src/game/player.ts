@@ -210,6 +210,7 @@ export class Player extends Thing {
                 }
                 this.crouching = this.controls.down.held;
                 this.texture = this.idleFrame;
+                this.velx = 0;
                 if (!this.onGround) {
                     this.vely += this.level.gravity*dt;
                     this.moveFurthest(this.x, this.y, 0, this.vely, dt);

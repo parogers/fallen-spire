@@ -18,19 +18,26 @@ import { Zombie } from './zombie';
 const GRAVITY = 600;
 
 
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(value, max));
+}
+
 export class Level {
     constructor(grid: Grid, entities: Entity[]) {
         this.grid = grid;
         this.entities = entities;
         this.things = new Set<Thing>();
         this.updaters = new Set<Thing>();
-        this.midground = new PIXI.Container();
         this.stage = new PIXI.Container();
         this.stage.addChild(grid);
-        this.stage.addChild(this.midground);
         this.gravity = GRAVITY;
         this.player = null;
+        this.cameraOffset = 0;
         spawn(this);
+    }
+
+    get midground(): PIXI.Container {
+        return this.grid.foreground;
     }
 
     addThing(thing: Thing) {
@@ -63,6 +70,25 @@ export class Level {
     }
 
     update(dt: number) {
+        this.grid.viewport.width = 200;
+        this.grid.viewport.height = 100;
+        if (this.player.velx) {
+            const offset = this.cameraOffset + 30*this.player.facing*dt;
+            this.cameraOffset = Math.min(Math.abs(offset), 20)*Math.sign(offset);
+        }
+        const w = 0.8;
+        const trackX = this.player.x + this.cameraOffset;
+        const trackY = this.player.y;
+        this.grid.viewport.x = w*this.grid.viewport.x + (1-w)*clamp(
+            trackX - this.grid.viewport.width/2,
+            0,
+            this.grid.gridWidth
+        );
+        this.grid.viewport.y = w*this.grid.viewport.y + (1-w)*clamp(
+            trackY - this.grid.viewport.height/2,
+            0,
+            this.grid.gridHeight
+        );
         this.grid.update(dt);
         this.updaters.values().forEach(thing => {
             if (thing.update) {
@@ -96,7 +122,6 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
     hitMap.set('tiles.png-17', makeDiagonalHitMap('down', 'below'));
     hitMap.set('tiles.png-18', makeDiagonalHitMap('up', 'below'));
     const grid = new Grid({
-        fixedViewport: false,
         tileSize: 8,
         hitMap: hitMap,
     });
