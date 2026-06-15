@@ -219,15 +219,7 @@ export class Player extends Thing {
                         this.state = PlayerState.Walking;
                     } else if (this.controls.jump.pressed || this.controls.up.pressed) {
                         this.velx = 0;
-                        this.vely = -this.jumpSpeed;
-                        if (this.checkGrabAt(this.x, this.y - 24)) {
-                            this.state = PlayerState.JumpingToClimb;
-                        } else if (this.checkGrabAt(this.x, this.y - 16)) {
-                            this.state = PlayerState.ClimbFromHanging;
-                            this.texture = this.jumpVerticalAnim.frames[1];
-                        } else {
-                            this.state = PlayerState.Jumping;
-                        }
+                        this.startJump();
                     }
                 }
                 break;
@@ -249,8 +241,9 @@ export class Player extends Thing {
                 this.texture = this.walkAnim.update(dt);
                 if (this.controls.jump.pressed || this.controls.up.pressed) {
                     this.velx = this.facing * this.walkSpeed;
-                    this.vely = -this.jumpSpeed;
-                    this.state = PlayerState.Jumping;
+                    this.startJump();
+                    // this.vely = -this.jumpSpeed;
+                    // this.state = PlayerState.Jumping;
                 }
                 break;
 
@@ -307,7 +300,7 @@ export class Player extends Thing {
 
             case PlayerState.ClimbFromHanging:
                 if (isStateChanged) {
-                    const startFrame = this.lastState === PlayerState.Idle ? 0 : 1;
+                    const startFrame = (this.lastState === PlayerState.Idle || this.lastState === PlayerState.Walking) ? 0 : 1;
                     this.climbFromHangingAnim.reset(startFrame);
                 }
                 const lastFrame = this.climbFromHangingAnim.frameInt;
@@ -359,6 +352,19 @@ export class Player extends Thing {
         shot.y = this.y - this.handHeight;
         this.level.addThing(shot);
         this.attacking = true;
+    }
+
+    startJump() {
+        if (this.checkGrabAt(this.x, this.y - 24)) {
+            this.state = PlayerState.JumpingToClimb;
+            this.vely = -this.jumpSpeed;
+        } else if (this.checkGrabAt(this.x, this.y - 16)) {
+            this.state = PlayerState.ClimbFromHanging;
+            this.vely = 0;
+        } else {
+            this.state = PlayerState.Jumping;
+            this.vely = -this.jumpSpeed;
+        }
     }
 
     updateAttack() {
