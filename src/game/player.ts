@@ -90,6 +90,7 @@ export class Player extends Thing {
         this.sprite = new PIXI.Sprite();
         this.climbFromHangingAnim = new Animation({
             frames: [
+                'hero-jump-vertical-1',
                 'hero-climb-from-hanging-0',
                 'hero-climb-from-hanging-1',
                 'hero-climb-from-hanging-2',
@@ -197,7 +198,7 @@ export class Player extends Thing {
 
     update(dt: number) {
         if (this.level.getSolidAt(this.x, this.y)) {
-            console.warn('player stuck in ground');
+            console.warn('player stuck in ground', this.x, this.y);
         }
         const currentState = this.state;
         const isStateChanged = this.state !== this.lastState;
@@ -216,14 +217,17 @@ export class Player extends Thing {
                     this.vely = 0;
                     if (this.controls.dx) {
                         this.state = PlayerState.Walking;
-                    } else if (this.controls.jump.pressed) {
+                    } else if (this.controls.jump.pressed || this.controls.up.pressed) {
                         this.velx = 0;
                         this.vely = -this.jumpSpeed;
-                        this.state = PlayerState.Jumping;
-                    } else if (this.controls.up.pressed) {
-                        this.velx = 0;
-                        this.vely = -this.jumpSpeed;
-                        this.state = PlayerState.JumpingToClimb;
+                        if (this.checkGrabAt(this.x, this.y - 24)) {
+                            this.state = PlayerState.JumpingToClimb;
+                        } else if (this.checkGrabAt(this.x, this.y - 16)) {
+                            this.state = PlayerState.ClimbFromHanging;
+                            this.texture = this.jumpVerticalAnim.frames[1];
+                        } else {
+                            this.state = PlayerState.Jumping;
+                        }
                     }
                 }
                 break;
@@ -243,7 +247,7 @@ export class Player extends Thing {
                 }
                 this.crouching = this.controls.down.held;
                 this.texture = this.walkAnim.update(dt);
-                if (this.controls.jump.pressed) {
+                if (this.controls.jump.pressed || this.controls.up.pressed) {
                     this.velx = this.facing * this.walkSpeed;
                     this.vely = -this.jumpSpeed;
                     this.state = PlayerState.Jumping;
@@ -282,18 +286,14 @@ export class Player extends Thing {
                     this.state = PlayerState.Idle;
                     break;
                 }
-                if (Math.abs(this.vely) < 20) {
-                    const hands = 16;
-                    if (
-                        !this.level.getFullSolidAt(this.x + this.facing*2, this.y - hands) &&
-                        !this.level.getFullSolidAt(this.x + 1, this.y - (hands-2)) &&
-                        this.level.getFullSolidAt(this.x + this.facing*2, this.y - hands/2)
-                    ) {
-                        this.state = PlayerState.Hanging;
-                        const cell = this.level.grid.getCellAt(this.x + this.facing*2, this.y-hands);
-                        this.y = cell.y + this.level.grid.tileSize.height + hands;
-                        this.x = cell.x + this.level.grid.tileSize.width;
-                    }
+                if (Math.abs(this.vely) < 5 && this.checkGrabAt(this.x, this.y - this.handHeight)) {
+                    this.state = PlayerState.Hanging;
+                    const cell = this.level.grid.getCellAt(
+                        this.x + this.facing*2,
+                        this.y - this.handHeight
+                    );
+                    this.x = cell.x + (this.facing > 0 ? -0.1 : this.level.grid.tileSize.width);
+                    this.y = cell.y + this.level.grid.tileSize.height + this.handHeight;
                 }
                 break;
 
@@ -307,15 +307,17 @@ export class Player extends Thing {
 
             case PlayerState.ClimbFromHanging:
                 if (isStateChanged) {
-                    this.climbFromHangingAnim.reset();
-                    this.y -= 11;
+                    const startFrame = this.lastState === PlayerState.Idle ? 0 : 1;
+                    this.climbFromHangingAnim.reset(startFrame);
                 }
                 const lastFrame = this.climbFromHangingAnim.frameInt;
                 this.texture = this.climbFromHangingAnim.update(dt);
-                if (lastFrame !== this.climbFromHangingAnim.frameInt) {
+                if (isStateChanged || lastFrame !== this.climbFromHangingAnim.frameInt) {
                     if (this.climbFromHangingAnim.frameInt === 1) {
-                        this.y -= 2;
+                        this.y -= 11;
                     } else if (this.climbFromHangingAnim.frameInt === 2) {
+                        this.y -= 2;
+                    } else if (this.climbFromHangingAnim.frameInt === 3) {
                         this.y -= 4;
                     }
                 }
@@ -337,7 +339,18 @@ export class Player extends Thing {
         if (this.state === PlayerState.Jumping) {
             return 6.5;
         }
+        if (this.state === PlayerState.JumpingToClimb) {
+            return 16;
+        }
         return 8.5;
+    }
+
+    checkGrabAt(x, y) {
+        return (
+            !this.level.getFullSolidAt(x + this.facing*2, y) &&
+            !this.level.getFullSolidAt(x - this.facing, y + 2) &&
+            this.level.getFullSolidAt(x + this.facing*2, y + 2)
+        );
     }
 
     startAttack() {

@@ -23,8 +23,8 @@ export class BaseAnimation {
         return null;
     }
 
-    reset() {
-        this.frame = 0;
+    reset(frame: number = 0) {
+        this.frame = frame;
     }
 }
 

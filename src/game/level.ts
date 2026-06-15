@@ -140,7 +140,6 @@ export function spawn(level: Level)
                 console.warn('unknown monster type: ' + entity.type);
             }
         } else if (entity.type === 'scenery') {
-            console.log(entity.name);
             const scenery = new Scenery(entity.name);
             scenery.x = entity.x  + entity.width/2;
             scenery.y = entity.y;
