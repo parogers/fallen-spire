@@ -8,6 +8,7 @@ import {
 } from '@parogers/pixijs-easygrid';
 
 import { Thing } from './thing';
+import { Scenery } from './scenery';
 import { Player } from './player';
 import { type Entity, loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
 import { Rat } from './rat';
@@ -138,6 +139,12 @@ export function spawn(level: Level)
             } else {
                 console.warn('unknown monster type: ' + entity.type);
             }
+        } else if (entity.type === 'scenery') {
+            console.log(entity.name);
+            const scenery = new Scenery(entity.name);
+            scenery.x = entity.x  + entity.width/2;
+            scenery.y = entity.y;
+            level.addThing(scenery);
         }
     }
 }

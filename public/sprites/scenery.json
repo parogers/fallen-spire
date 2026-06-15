@@ -1,0 +1,62 @@
+{
+    "frames": {
+        "pine-tree-0": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 16,
+                "h": 33
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 3,
+                "w": 15,
+                "h": 28
+            },
+            "frame": {
+                "x": 16,
+                "y": 1,
+                "w": 15,
+                "h": 28
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9090909090909091
+            }
+        },
+        "pine-tree-1": {
+            "rotated": false,
+            "trimmed": true,
+            "sourceSize": {
+                "w": 16,
+                "h": 33
+            },
+            "spriteSourceSize": {
+                "x": 1,
+                "y": 1,
+                "w": 14,
+                "h": 31
+            },
+            "frame": {
+                "x": 1,
+                "y": 1,
+                "w": 14,
+                "h": 31
+            },
+            "anchor": {
+                "x": 0.5,
+                "y": 0.9090909090909091
+            }
+        }
+    },
+    "meta": {
+        "app": "https://github.com/houmain/spright",
+        "format": "RGBA8888",
+        "image": "scenery.png",
+        "size": {
+            "w": 32,
+            "h": 33
+        },
+        "scale": 1.0
+    }
+}

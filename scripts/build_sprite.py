@@ -24,7 +24,10 @@ def extract_pivots(src):
         return x, y
 
     doc = GimpDocument(src)
-    commentNode = next(p for p in doc.parasites if p.name == 'gimp-comment')
+    try:
+        commentNode = next(p for p in doc.parasites if p.name == 'gimp-comment')
+    except StopIteration:
+        return {}
     comment = commentNode.data.decode('utf-8').replace('\00', '')
     parser = configparser.ConfigParser()
     try:

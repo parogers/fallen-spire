@@ -9,6 +9,7 @@ export type Anchor = {
 const SPRITESHEETS = [
     '/sprites/hero.json',
     '/sprites/monsters.json',
+    '/sprites/scenery.json',
 ];
 
 
