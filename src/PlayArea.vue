@@ -39,11 +39,14 @@ onUnmounted(() => {
 
 <template>
     <div class="fps">{{ fps|0 }} FPS</div>
-    <div ref="playArea">
-    </div>
+    <div id="play-area" ref="playArea"></div>
 </template>
 
 <style scoped>
+#play-area {
+    font-size: 0;
+}
+
 .fps {
     position: absolute;
     top: 1em;

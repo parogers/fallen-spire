@@ -19,6 +19,8 @@ const GRAVITY = 600;
 const CAMERA_SMOOTHING_WEIGHT = 0.8;
 const CAMERA_OFFSET_SPEED = 30;
 const CAMERA_OFFSET_MAX = 20;
+export const CAMERA_WIDTH = 200;
+export const CAMERA_HEIGHT = 120;
 
 
 function clamp(value, min, max) {
@@ -36,8 +38,8 @@ class Camera
 
     updateViewport(dt: number) {
         const viewport = this.level.grid.viewport;
-        viewport.width = 200;
-        viewport.height = 100;
+        viewport.width = CAMERA_WIDTH;
+        viewport.height = CAMERA_HEIGHT;
         if (this.tracking.velx) {
             const offset = this.offset + CAMERA_OFFSET_SPEED*this.tracking.facing*dt;
             this.offset = Math.min(Math.abs(offset), CAMERA_OFFSET_MAX)*Math.sign(offset);

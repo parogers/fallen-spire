@@ -1,10 +1,11 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Level, loadLevel } from './level';
+import { Level, loadLevel, CAMERA_WIDTH, CAMERA_HEIGHT } from './level';
 import { Player } from './player';
 import { KeyboardControls } from './controls';
 import { Loader } from './loader';
+import { scaleToViewport } from '@parogers/pixijs-easygrid'
 
 
 export class Game {
@@ -19,6 +20,12 @@ export class Game {
     {
         this.app = new PIXI.Application();
         await this.app.init({ background: '#a0a0a0', resizeTo: window });
+        setTimeout(() => {
+            scaleToViewport(this.app, {
+                width: CAMERA_WIDTH,
+                height: CAMERA_HEIGHT,
+            })
+        }, 100);
 
         await Loader.load();
         this.level = await loadLevel(this.app.renderer, 'map.tmx');
