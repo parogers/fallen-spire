@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev-sprites": "./scripts/watch_sprites.sh",
+    "dev-assets": "./scripts/watch_assets.sh",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },

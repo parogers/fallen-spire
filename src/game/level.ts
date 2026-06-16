@@ -146,13 +146,15 @@ export class Level {
 export async function loadLevel(renderer: PIXI.Renderer, src: string)
 {
     const map = await loadTiledMap(src);
-    const tileset = map.tilesets[0].data;
-    const tileNamePrefix = tileset.source + '-';
-    const sheet = await makeSpritesheetFromTileset(tileset, tileNamePrefix);
+    // const tileset = map.tilesets[0].data;
+    // const tileNamePrefix = tileset.source + '-';
+    // const sheet = await makeSpritesheetFromTileset(tileset, tileNamePrefix);
+    const tileNamePrefix = 'tiles-';
+    const sheet = await PIXI.Assets.load('tiles.json');
 
     const hitMap = getHitMapFromTileSheet(renderer, sheet);
-    hitMap.set('tiles.png-17', makeDiagonalHitMap('down', 'below'));
-    hitMap.set('tiles.png-18', makeDiagonalHitMap('up', 'below'));
+    hitMap.set('tiles-17', makeDiagonalHitMap('down', 'below'));
+    hitMap.set('tiles-18', makeDiagonalHitMap('up', 'below'));
     const grid = new Grid({
         tileSize: 8,
         hitMap: hitMap,
@@ -166,7 +168,8 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
             if (value === 0) {
                 return null;
             }
-            return tileNamePrefix + (value-1);
+            const tile = tileNamePrefix + ('' + (value-1)).padStart(2, '0');
+            return tile;
         });
     }));
     const mapEntityLayer = map.layers.find(layer => layer.name === 'entities') || [];
