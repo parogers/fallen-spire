@@ -68,6 +68,8 @@ export class Level {
         this.things = new Set<Thing>();
         this.updaters = new Set<Thing>();
         this.stage = new PIXI.Container();
+        this.bg = new PIXI.Graphics().rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT).fill({ color: 'black' });
+        this.stage.addChild(this.bg);
         this.stage.addChild(grid);
         this.gravity = GRAVITY;
         this.player = null;
