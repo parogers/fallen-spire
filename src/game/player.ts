@@ -162,6 +162,8 @@ export class Player extends Thing {
         this.crouching = false;
         this._texture = null;
         this.combatHitBox = makeHitBox(6, 14);
+        this.onGroundHover = false;
+        this.onGroundHoverCooldown = 0;
         // const box = new PIXI.Graphics().rect(-0.5, -0.5, 1, 1).fill({ color: 'red' });
         // this.sprite.addChild(box);
     }
@@ -199,6 +201,15 @@ export class Player extends Thing {
     update(dt: number) {
         if (this.level.getSolidAt(this.x, this.y)) {
             console.warn('player stuck in ground', this.x, this.y);
+        }
+        if (this.onGround) {
+            this.onGroundHover = true;
+            this.onGroundHoverTimer = 0.15;
+        } else {
+            this.onGroundHoverTimer -= dt;
+            if (this.onGroundHoverTimer <= 0) {
+                this.onGroundHover = false;
+            }
         }
         const currentState = this.state;
         const isStateChanged = this.state !== this.lastState;
@@ -240,7 +251,7 @@ export class Player extends Thing {
                 }
                 this.crouching = this.controls.down.held;
                 this.texture = this.walkAnim.update(dt);
-                if (this.onGround && (this.controls.jump.pressed || this.controls.up.pressed)) {
+                if (this.onGroundHover && (this.controls.jump.pressed || this.controls.up.pressed)) {
                     this.velx = this.facing * this.walkSpeed;
                     this.startJump();
                 }
