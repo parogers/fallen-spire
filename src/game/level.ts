@@ -16,11 +16,48 @@ import { Zombie } from './zombie';
 
 
 const GRAVITY = 600;
+const CAMERA_SMOOTHING_WEIGHT = 0.8;
+const CAMERA_OFFSET_SPEED = 30;
+const CAMERA_OFFSET_MAX = 20;
 
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
 }
+
+
+class Camera
+{
+    constructor(level: Level) {
+        this.level = level;
+        this.offset = 0;
+        this.tracking = null;
+    }
+
+    updateViewport(dt: number) {
+        const viewport = this.level.grid.viewport;
+        viewport.width = 200;
+        viewport.height = 100;
+        if (this.tracking.velx) {
+            const offset = this.offset + CAMERA_OFFSET_SPEED*this.tracking.facing*dt;
+            this.offset = Math.min(Math.abs(offset), CAMERA_OFFSET_MAX)*Math.sign(offset);
+        }
+        const w = CAMERA_SMOOTHING_WEIGHT;
+        const trackX = this.tracking.x + this.offset;
+        const trackY = this.tracking.y;
+        viewport.x = w*viewport.x + (1-w)*clamp(
+            trackX - viewport.width/2,
+            0,
+            this.level.width
+        );
+        viewport.y = w*viewport.y + (1-w)*clamp(
+            trackY - viewport.height/2,
+            0,
+            this.level.height
+        );
+    }
+}
+
 
 export class Level {
     constructor(grid: Grid, entities: Entity[]) {
@@ -32,8 +69,16 @@ export class Level {
         this.stage.addChild(grid);
         this.gravity = GRAVITY;
         this.player = null;
-        this.cameraOffset = 0;
+        this.camera = new Camera(this);
         spawn(this);
+    }
+
+    get width(): number {
+        return this.grid.gridWidth;
+    }
+
+    get height(): number {
+        return this.grid.gridHeight;
     }
 
     get midground(): PIXI.Container {
@@ -53,6 +98,7 @@ export class Level {
         }
         if (thing instanceof Player) {
             this.player = thing;
+            this.camera.tracking = thing;
             this.player.unstickPostSpawn();
         }
     }
@@ -70,25 +116,7 @@ export class Level {
     }
 
     update(dt: number) {
-        this.grid.viewport.width = 200;
-        this.grid.viewport.height = 100;
-        if (this.player.velx) {
-            const offset = this.cameraOffset + 30*this.player.facing*dt;
-            this.cameraOffset = Math.min(Math.abs(offset), 20)*Math.sign(offset);
-        }
-        const w = 0.8;
-        const trackX = this.player.x + this.cameraOffset;
-        const trackY = this.player.y;
-        this.grid.viewport.x = w*this.grid.viewport.x + (1-w)*clamp(
-            trackX - this.grid.viewport.width/2,
-            0,
-            this.grid.gridWidth
-        );
-        this.grid.viewport.y = w*this.grid.viewport.y + (1-w)*clamp(
-            trackY - this.grid.viewport.height/2,
-            0,
-            this.grid.gridHeight
-        );
+        this.camera.updateViewport(dt);
         this.grid.update(dt);
         this.updaters.values().forEach(thing => {
             if (thing.update) {
