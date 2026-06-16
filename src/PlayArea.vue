@@ -44,7 +44,7 @@ onUnmounted(() => {
 
 <style scoped>
 #play-area {
-    font-size: 0;
+    line-height: 0;
 }
 
 .fps {

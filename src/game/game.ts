@@ -20,13 +20,9 @@ export class Game {
     {
         this.app = new PIXI.Application();
         await this.app.init({ background: '#a0a0a0', resizeTo: window });
-        setTimeout(() => {
-            scaleToViewport(this.app, {
-                width: CAMERA_WIDTH,
-                height: CAMERA_HEIGHT,
-            })
-        }, 100);
-
+        this.app.renderer.on('resize', () => {
+            this.autoResize();
+        });
         await Loader.load();
         this.level = await loadLevel(this.app.renderer, 'map.tmx');
         this.controls = new KeyboardControls();
@@ -43,6 +39,17 @@ export class Game {
         this.level.addThing(player);
         this.callUpdate = time => this.update(time);
         PIXI.Ticker.shared.add(this.callUpdate);
+
+        setTimeout(() => {
+            this.app.renderer.emit('resize');
+        }, 1);
+    }
+
+    autoResize() {
+        scaleToViewport(this.app, {
+            width: CAMERA_WIDTH,
+            height: CAMERA_HEIGHT,
+        });
     }
 
     destroy() {
