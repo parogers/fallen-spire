@@ -240,11 +240,9 @@ export class Player extends Thing {
                 }
                 this.crouching = this.controls.down.held;
                 this.texture = this.walkAnim.update(dt);
-                if (this.controls.jump.pressed || this.controls.up.pressed) {
+                if (this.onGround && (this.controls.jump.pressed || this.controls.up.pressed)) {
                     this.velx = this.facing * this.walkSpeed;
                     this.startJump();
-                    // this.vely = -this.jumpSpeed;
-                    // this.state = PlayerState.Jumping;
                 }
                 break;
 
