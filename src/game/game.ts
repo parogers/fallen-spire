@@ -55,8 +55,13 @@ export class Game {
     destroy() {
         PIXI.Ticker.shared.remove(this.callUpdate);
         PIXI.Assets.cache.reset();
-        this.controls.destroy();
-        this.app.destroy();
+        if (this.controls) {
+            this.controls.destroy();
+        }
+        if (this.app) {
+            this.app.destroy();
+        }
+        this.controls = null;
         this.app = null;
     }
 
