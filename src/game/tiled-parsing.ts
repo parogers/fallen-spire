@@ -17,6 +17,9 @@ export type Entity = {
 function parseTileset(text) {
     const data = new DOMParser().parseFromString(text, 'text/xml');
     const tileset = data.documentElement;
+    if (tileset.nodeName !== 'tileset') {
+        throw Error('expecting tileset root to be "tileset"');
+    }
     const tileWidth = +tileset.getAttribute('tilewidth');
     const tileHeight = +tileset.getAttribute('tileheight');
     const spacing = +tileset.getAttribute('spacing');
@@ -117,9 +120,14 @@ export async function loadTiledMap(src) {
             alias: 'tiles',
             parser: 'loadTxt',
         });
-        const tileset = parseTileset(tilesetText);
-        tilesetRef.data = tileset;
-        tileset.texture = await PIXI.Assets.load(tileset.source);
+        try {
+            const tileset = parseTileset(tilesetText);
+            tilesetRef.data = tileset;
+            tileset.texture = await PIXI.Assets.load(tileset.source);
+        } catch(error) {
+            console.error('error parsing tileset: ' + tilesetRef.src);
+            throw error;
+        }
     }
     return map;
 }
