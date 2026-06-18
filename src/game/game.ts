@@ -40,6 +40,9 @@ export class Game {
         this.callUpdate = time => this.update(time);
         PIXI.Ticker.shared.add(this.callUpdate);
 
+        this.level.showMessage('Fallen Spire Demo');
+        this.level.showMessage('Created by Petrie');
+
         setTimeout(() => {
             this.app.renderer.emit('resize');
         }, 1);

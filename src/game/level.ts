@@ -13,7 +13,7 @@ import { Player } from './player';
 import { type Entity, loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
 import { Rat } from './rat';
 import { Zombie } from './zombie';
-
+import { MessageArea } from './message';
 
 const GRAVITY = 600;
 const CAMERA_SMOOTHING_WEIGHT = 0.8;
@@ -74,6 +74,11 @@ export class Level {
         this.gravity = GRAVITY;
         this.player = null;
         this.camera = new Camera(this);
+        this.messageArea = new MessageArea(
+            CAMERA_WIDTH,
+            CAMERA_HEIGHT
+        );
+        this.stage.addChild(this.messageArea.stage);
         spawn(this);
     }
 
@@ -121,6 +126,7 @@ export class Level {
 
     update(dt: number) {
         this.camera.updateViewport(dt);
+        this.messageArea.update(dt);
         this.grid.update(dt);
         this.updaters.values().forEach(thing => {
             if (thing.update) {
@@ -139,6 +145,12 @@ export class Level {
 
     findEntity(name: string): Entity|null {
         return this.entities.find(e => e.name === name) ?? null;
+    }
+
+    showMessage(msg: string) {
+        this.messageArea.show({
+            text: msg,
+        });
     }
 }
 

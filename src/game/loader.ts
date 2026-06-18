@@ -6,10 +6,13 @@ export type Anchor = {
     y: number;
 }
 
-const SPRITESHEETS = [
+export const DEFAULT_FONT_FAMILY = 'BitScript';
+
+const ASSETS = [
     '/sprites/hero.json',
     '/sprites/monsters.json',
     '/sprites/scenery.json',
+    'BitScript.ttf',
 ];
 
 
@@ -24,10 +27,13 @@ export class Loader {
     }
 
     static async load() {
-        for (let spritesheet of SPRITESHEETS) {
-            const sheet = await PIXI.Assets.load(spritesheet);
-            for (let spriteName in sheet.data.frames) {
-                const anchor = sheet.data.frames[spriteName].anchor;
+        for (let url of ASSETS) {
+            const asset = await PIXI.Assets.load(url);
+            if (!asset?.data?.frames) {
+                continue;
+            }
+            for (let spriteName in asset.data.frames) {
+                const anchor = asset.data.frames[spriteName].anchor;
                 Loader.shared.anchors.set(spriteName, anchor);
             }
         }
