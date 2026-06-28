@@ -16,6 +16,26 @@ const ASSETS = [
 ];
 
 
+/*
+ * Returns a list of textures (names) matching the given pattern
+ */
+export function findTextures(pattern: string): string[] {
+    const names = [];
+    const prefix = pattern.replace('*', '');
+    if (pattern === prefix) {
+        return [pattern];
+    }
+    while (true) {
+        const name = prefix + names.length;
+        if (!PIXI.Assets.cache.has(name)) {
+            break;
+        }
+        names.push(name);
+    }
+    return names;
+}
+
+
 export class Loader {
     static shared = new Loader();
     private anchors = new Map<string, Anchor>();

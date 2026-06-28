@@ -1,6 +1,9 @@
 
+import { findTextures } from './loader';
+
+
 export type AnimationParams = {
-    frames: string[];
+    frames: string[]|string;
     fps: number;
     looping?: boolean;
 }
@@ -31,8 +34,14 @@ export class BaseAnimation {
 
 export class Animation extends BaseAnimation {
     constructor(params: AnimationParams) {
+        function getFrames(): string[] {
+            if (Array.isArray(params.frames)) {
+                return params.frames;
+            }
+            return findTextures(params.frames);
+        }
         super();
-        this.frames = params.frames;
+        this.frames = getFrames();
         this.fps = params.fps ?? 1;
         this.looping = params.looping ?? true;
         this.frame = 0;

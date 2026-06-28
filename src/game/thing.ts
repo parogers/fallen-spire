@@ -57,12 +57,19 @@ export class Thing {
             this._texture = name;
             const anchor = Loader.shared.getAnchor(name);
             this.sprite.texture = PIXI.Assets.cache.get(name);
+            if (!this.sprite.texture) {
+                console.warn('cannot find sprite texture:', name);
+            }
             if (anchor) {
                 this.sprite.anchor = anchor;
             } else {
                 console.error('cannot find anchor for: ' + name);
             }
         }
+    }
+
+    get texture(): string {
+        return this._texture;
     }
 
     get onGround(): boolean {
