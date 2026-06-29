@@ -2,6 +2,25 @@
 import * as PIXI from 'pixi.js';
 
 
+export type TiledMap = {
+    tilesets: Tileset[];
+    layers: any;
+}
+
+
+export type Tileset = {
+    tileWidth: number;
+    tileHeight: number;
+    spacing: number;
+    margin: number;
+    columns: number;
+    tileCount: number;
+    source: string;
+    sourceWidth: number;
+    sourceHeight: number;
+}
+
+
 export type Entity = {
     name: string;
     type: string;
@@ -14,7 +33,7 @@ export type Entity = {
 }
 
 
-function parseTileset(text) {
+function parseTileset(text: string): Tileset {
     const data = new DOMParser().parseFromString(text, 'text/xml');
     const tileset = data.documentElement;
     if (tileset.nodeName !== 'tileset') {
@@ -40,21 +59,21 @@ function parseTileset(text) {
     };
 }
 
-function parseGrid(text, width, height) {
+function parseGrid(text: string, width: number, height: number): number[][] {
     const grid = text.trim().split('\n').map(line => {
         return line.split(',').filter(value => !!value).map(value => +value);
     });
     return grid;
 }
 
-function parseObjectProperties(node) {
+function parseObjectProperties(node: Element): { [key: string]: string } {
     return Object.fromEntries(
         Array.from(node.getElementsByTagName('property'))
             .map(p => [p.getAttribute('name'), p.getAttribute('value')])
     );
 }
 
-function parseTiledMap(text) {
+function parseTiledMap(text: string) {
     const data = new DOMParser().parseFromString(text, 'text/xml');
     const map = data.documentElement;
     if (map.nodeName !== 'map') {
@@ -99,13 +118,12 @@ function parseTiledMap(text) {
         }
     });
     return {
-        layersByName,
         layers,
         tilesets,
     };
 }
 
-export async function loadTiledMap(src) {
+export async function loadTiledMap(src: string): TiledMap {
     const mapText = await PIXI.Assets.load({
         src: src,
         alias: 'map',
@@ -133,7 +151,7 @@ export async function loadTiledMap(src) {
 }
 
 
-export function makeSpritesheetFromGrid(tileset, tileNamePrefix) {
+export function makeSpritesheetFromGrid(tileset: Tileset, tileNamePrefix: string) {
     const tiles = {};
     const rows = (tileset.tileCount / tileset.columns)|0 + 1;
     for (let row = 0; row < rows; row++) {
@@ -185,7 +203,10 @@ export function makeSpritesheetFromGrid(tileset, tileNamePrefix) {
 }
 
 
-export async function makeSpritesheetFromTileset(tileset, tileNamePrefix) {
+export async function makeSpritesheetFromTileset(
+    tileset: Tileset,
+    tileNamePrefix: string
+): PIXI.Spritesheet {
     const sheetData = makeSpritesheetFromGrid(tileset, tileNamePrefix);
     const texture = await PIXI.Assets.load(tileset.source);
     const sheet = new PIXI.Spritesheet(texture, sheetData);
