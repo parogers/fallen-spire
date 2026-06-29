@@ -1,17 +1,9 @@
 
 import * as PIXI from 'pixi.js';
 
-import {
-    Grid,
-    StackedGrid,
-    getHitMapFromTileSheet,
-    makeDiagonalHitMap,
-} from '@parogers/pixijs-easygrid';
-
 import { Thing } from './thing';
 import { Scenery } from './scenery';
 import { Player } from './player';
-import { type Entity, loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
 import { Rat } from './rat';
 import { Zombie } from './zombie';
 import { MessageArea } from './message';
@@ -171,62 +163,6 @@ export class Level {
         });
     }
 }
-
-
-export async function loadLevel(renderer: PIXI.Renderer, src: string)
-{
-    const map = await loadTiledMap(src);
-    const tileNamePrefix = 'tiles-';
-    const sheet = await PIXI.Assets.load('tiles.json');
-
-    const hitMap = getHitMapFromTileSheet(renderer, sheet);
-    hitMap.set('tiles-17', makeDiagonalHitMap('down', 'below'));
-    hitMap.set('tiles-18', makeDiagonalHitMap('up', 'below'));
-    hitMap.set('tiles-10', makeDiagonalHitMap('down', 'below'));
-    hitMap.set('tiles-11', makeDiagonalHitMap('up', 'below'));
-    const stacked = new StackedGrid();
-    const midground = map.layers.find(layer => layer.name === 'grid');
-    if (!midground) {
-        throw Error('cannot find grid in: ' + src);
-    }
-    function mapGridToTiles(grid: number[][]): string[][] {
-        return grid.map(row => {
-            return row.map(value => {
-                if (value === 0) {
-                    return null;
-                }
-                const tile = tileNamePrefix + ('' + (value-1)).padStart(2, '0');
-                return tile;
-            });
-        })
-    }
-
-    function getBackgroundGrid(): Grid|null {
-        const background = map.layers.find(layer => layer.name === 'background');
-        if (!background) {
-            return null;
-        }
-        const bg = new Grid({
-            autoUpdate: false,
-            tiles: mapGridToTiles(background.grid),
-        });
-        return bg;
-    }
-    const bg = getBackgroundGrid();
-    if (bg) {
-        stacked.addGrid(getBackgroundGrid(), 'background');
-    }
-    const grid = new Grid({
-        hitMap: hitMap,
-        autoUpdate: false,
-        tiles: mapGridToTiles(midground.grid),
-    });
-    stacked.addGrid(grid, 'midground');
-    const mapEntityLayer = map.layers.find(layer => layer.name === 'entities') || [];
-    const entities = mapEntityLayer.objects;
-    return new Level({ grid: stacked, entities });
-}
-
 
 export function spawn(level: Level)
 {

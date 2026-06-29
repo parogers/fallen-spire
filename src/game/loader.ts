@@ -8,7 +8,9 @@ export type Anchor = {
 
 export const DEFAULT_FONT_FAMILY = 'BitScript';
 
+const TILES_JSON = '/tiles.json';
 const ASSETS = [
+    TILES_JSON,
     '/sprites/hero.json',
     '/sprites/monsters.json',
     '/sprites/scenery.json',
@@ -44,6 +46,10 @@ export class Loader {
 
     getAnchor(spriteName: string): Anchor|null {
         return this.anchors.get(spriteName) ?? null;
+    }
+
+    static getTilesSpritesheet(): PIXI.Spritesheet {
+        return PIXI.Assets.cache.get(TILES_JSON);
     }
 
     static async load() {

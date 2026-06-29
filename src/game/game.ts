@@ -1,7 +1,8 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Level, loadLevel, CAMERA_WIDTH, CAMERA_HEIGHT } from './level';
+import { Level, CAMERA_WIDTH, CAMERA_HEIGHT } from './level';
+import { loadLevel } from './level-loader';
 import { Player } from './player';
 import { KeyboardControls } from './controls';
 import { Loader } from './loader';
