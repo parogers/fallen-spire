@@ -3,6 +3,7 @@ import * as PIXI from 'pixi.js';
 
 import {
     Grid,
+    StackedGrid,
     getHitMapFromTileSheet,
     makeDiagonalHitMap,
 } from '@parogers/pixijs-easygrid';
@@ -27,7 +28,7 @@ export const CAMERA_HEIGHT = 120;
 
 export type LevelParams = {
     grid: Grid;
-    background?: Grid;
+    // background?: Grid;
     entities: Entity[];
 }
 
@@ -66,12 +67,6 @@ class Camera
             0,
             this.level.height - viewport.height
         );
-        if (this.level.background) {
-            this.level.background.viewport.x = viewport.x;
-            this.level.background.viewport.y = viewport.y;
-            this.level.background.viewport.width = viewport.width;
-            this.level.background.viewport.height = viewport.height;
-        }
     }
 }
 
@@ -79,16 +74,12 @@ class Camera
 export class Level {
     constructor(params: LevelParams) {
         this.grid = params.grid;
-        this.background = params.background ?? null;
         this.entities = params.entities;
         this.things = new Set<Thing>();
         this.updaters = new Set<Thing>();
         this.stage = new PIXI.Container();
         this.bg = new PIXI.Graphics().rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT).fill({ color: 'black' });
         this.stage.addChild(this.bg);
-        if (this.background) {
-            this.stage.addChild(this.background);
-        }
         this.stage.addChild(this.grid);
         this.gravity = GRAVITY;
         this.player = null;
@@ -118,7 +109,7 @@ export class Level {
     }
 
     get midground(): PIXI.Container {
-        return this.grid.foreground;
+        return this.grid.layersByName.get('midground');
     }
 
     addThing(thing: Thing) {
@@ -126,7 +117,7 @@ export class Level {
             thing.level = this;
             this.things.add(thing);
             if (thing.sprite) {
-                this.midground.addChild(thing.sprite);
+                this.midground.foreground.addChild(thing.sprite);
             }
         }
         if (!this.updaters.has(thing) && thing.update) {
@@ -144,7 +135,7 @@ export class Level {
         this.things.delete(thing);
         this.updaters.delete(thing);
         if (thing.sprite) {
-            this.midground.removeChild(thing.sprite);
+            this.midground.foreground.removeChild(thing.sprite);
         }
         if (thing instanceof Player) {
             this.player = null;
@@ -163,11 +154,11 @@ export class Level {
     }
 
     getSolidAt(x: number, y: number): boolean {
-        return this.grid.getSolidAt(x, y);
+        return this.midground.getSolidAt(x, y);
     }
 
     getFullSolidAt(x: number, y: number): boolean {
-        return !!this.grid.getTileInfoAt(x, y);
+        return !!this.midground.getTileInfoAt(x, y);
     }
 
     findEntity(name: string): Entity|null {
@@ -185,9 +176,6 @@ export class Level {
 export async function loadLevel(renderer: PIXI.Renderer, src: string)
 {
     const map = await loadTiledMap(src);
-    // const tileset = map.tilesets[0].data;
-    // const tileNamePrefix = tileset.source + '-';
-    // const sheet = await makeSpritesheetFromTileset(tileset, tileNamePrefix);
     const tileNamePrefix = 'tiles-';
     const sheet = await PIXI.Assets.load('tiles.json');
 
@@ -196,15 +184,11 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
     hitMap.set('tiles-18', makeDiagonalHitMap('up', 'below'));
     hitMap.set('tiles-10', makeDiagonalHitMap('down', 'below'));
     hitMap.set('tiles-11', makeDiagonalHitMap('up', 'below'));
-    const grid = new Grid({
-        tileSize: 8,
-        hitMap: hitMap,
-    });
+    const stacked = new StackedGrid();
     const midground = map.layers.find(layer => layer.name === 'grid');
     if (!midground) {
         throw Error('cannot find grid in: ' + src);
     }
-
     function mapGridToTiles(grid: number[][]): string[][] {
         return grid.map(row => {
             return row.map(value => {
@@ -223,16 +207,24 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
             return null;
         }
         const bg = new Grid({
-            tileSize: grid.tileSize,
+            autoUpdate: false,
+            tiles: mapGridToTiles(background.grid),
         });
-        bg.setTiles(mapGridToTiles(background.grid));
         return bg;
     }
-
-    grid.setTiles(mapGridToTiles(midground.grid));
+    const bg = getBackgroundGrid();
+    if (bg) {
+        stacked.addGrid(getBackgroundGrid(), 'background');
+    }
+    const grid = new Grid({
+        hitMap: hitMap,
+        autoUpdate: false,
+        tiles: mapGridToTiles(midground.grid),
+    });
+    stacked.addGrid(grid, 'midground');
     const mapEntityLayer = map.layers.find(layer => layer.name === 'entities') || [];
     const entities = mapEntityLayer.objects;
-    return new Level({ grid, entities, background: getBackgroundGrid() });
+    return new Level({ grid: stacked, entities });
 }
 
 
