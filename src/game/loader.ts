@@ -1,5 +1,6 @@
 
 import * as PIXI from 'pixi.js';
+import { loadTiledMap } from './tiled-parsing';
 
 export type Anchor = {
     x: number;
@@ -15,7 +16,26 @@ const ASSETS = [
     '/sprites/monsters.json',
     '/sprites/scenery.json',
     'BitScript.ttf',
+    'map.tmx',
 ];
+
+export const TILED_MAP_LOADER = {
+    id: 'fallen-spire/map-loader',
+    extension: {
+        type: PIXI.ExtensionType.LoadParser,
+        name: 'fallen-spire-map-loader',
+    },
+    test(url: string) {
+        return url.endsWith('.tmx');
+    },
+    async load(url: string) {
+        const response = await fetch(url);
+        const mapText = await response.text();
+        const map = await loadTiledMap(mapText)
+        return map;
+    },
+};
+PIXI.extensions.add(TILED_MAP_LOADER);
 
 
 /*
@@ -63,5 +83,9 @@ export class Loader {
                 Loader.shared.anchors.set(spriteName, anchor);
             }
         }
+    }
+
+    static getAssetNames(): string[] {
+        return ASSETS;
     }
 }

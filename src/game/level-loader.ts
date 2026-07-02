@@ -6,7 +6,7 @@ import {
     getHitMapFromTileSheet,
     makeDiagonalHitMap,
 } from '@parogers/pixijs-easygrid';
-import { type Entity, loadTiledMap, makeSpritesheetFromTileset } from './tiled-parsing';
+import { type Entity } from './tiled-parsing';
 import { Level } from './level';
 import { Loader } from './loader';
 
@@ -56,9 +56,8 @@ function getMidgroundGrid(map, renderer, tileNamePrefix: string): Grid|null {
 }
 
 
-export async function loadLevel(renderer: PIXI.Renderer, src: string)
+export async function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
 {
-    const map = await loadTiledMap(src);
     const tileNamePrefix = 'tiles-';
     const stacked = new StackedGrid();
     const midground = getMidgroundGrid(map, renderer, tileNamePrefix);
@@ -70,7 +69,36 @@ export async function loadLevel(renderer: PIXI.Renderer, src: string)
         stacked.addGrid(bg, 'background');
     }
     stacked.addGrid(midground, 'midground');
-    const mapEntityLayer = map.layers.find(layer => layer.name === 'entities') || [];
-    const entities = mapEntityLayer.objects;
+    const mapEntityLayer = map.layers.find(layer => layer.name === 'entities');
+    const entities = mapEntityLayer?.objects ?? [];
     return new Level({ grid: stacked, entities });
+}
+
+
+export class LevelManager {
+    tiledMapsByName = new Map();
+
+    constructor()
+    {
+        for (let name of Loader.getAssetNames()) {
+            if (!name.endsWith('.tmx')) {
+                continue;
+            }
+            const map = PIXI.Assets.cache.get(name);
+            for (let group of map.groups) {
+                if (this.tiledMapsByName.has(group.name)) {
+                    throw Error('duplicate map found: ' + group.name);
+                }
+                this.tiledMapsByName.set(group.name, group);
+            }
+        }
+    }
+
+    async loadLevel(renderer: PIXI.Renderer, name: string): Level|null {
+        const map = this.tiledMapsByName.get(name);
+        if (!map) {
+            throw Error('cannot find map: ' + name);
+        }
+        return await loadLevel(renderer, map);
+    }
 }

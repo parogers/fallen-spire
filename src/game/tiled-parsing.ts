@@ -2,9 +2,14 @@
 import * as PIXI from 'pixi.js';
 
 
+// TODO - placeholders
+export type TiledLayer = any;
+
 export type TiledMap = {
+    name: string;
     tilesets: Tileset[];
-    layers: any;
+    layers: TiledLayer[];
+    groups: TiledMap[];
 }
 
 
@@ -73,18 +78,19 @@ function parseObjectProperties(node: Element): { [key: string]: string } {
     );
 }
 
-function parseTiledMap(text: string) {
-    const data = new DOMParser().parseFromString(text, 'text/xml');
-    const map = data.documentElement;
-    if (map.nodeName !== 'map') {
-        throw Exception('file is not a tiled map');
+function parseTiledMap(doc: Element): TiledMap {
+    if (doc.nodeName !== 'map' && doc.nodeName !== 'group') {
+        throw Error('file is not a tiled map');
     }
-    const tilesets = [];
-    const layers = [];
-    const layersByName = {};
-    Array.from(map.children).forEach(child => {
+    const map = {
+        name: doc.getAttribute('name') ?? '',
+        tilesets: [],
+        layers: [],
+        groups: [],
+    };
+    Array.from(doc.children).forEach(child => {
         if (child.nodeName === 'tileset') {
-            tilesets.push({
+            map.tilesets.push({
                 firstGID: +child.getAttribute('firstgid'),
                 src: child.getAttribute('source'),
             });
@@ -95,7 +101,7 @@ function parseTiledMap(text: string) {
                 name: child.getAttribute('name'),
                 grid: parseGrid(child.children[0].textContent, width, height),
             };
-            layers.push(layer);
+            map.layers.push(layer);
         } else if (child.tagName === 'objectgroup') {
             const objects = Array.from(child.children).map(data => {
                 return {
@@ -113,24 +119,18 @@ function parseTiledMap(text: string) {
                 name: child.getAttribute('name'),
                 objects: objects,
             };
-            layers.push(layer);
-            layersByName[layer.name] = layer;
+            map.layers.push(layer);
+        } else if (child.tagName === 'group') {
+            const group = parseTiledMap(child);
+            map.groups.push(group);
         }
     });
-    return {
-        layers,
-        tilesets,
-    };
+    return map;
 }
 
-export async function loadTiledMap(src: string): TiledMap {
-    const mapText = await PIXI.Assets.load({
-        src: src,
-        alias: 'map',
-        parser: 'loadTxt',
-    });
-    const map = parseTiledMap(mapText);
-
+export async function loadTiledMap(mapText: string): TiledMap {
+    const data = new DOMParser().parseFromString(mapText, 'text/xml');
+    const map = parseTiledMap(data.documentElement);
     // Backfill the tileset definitions
     for (let tilesetRef of map.tilesets) {
         const tilesetText = await PIXI.Assets.load({

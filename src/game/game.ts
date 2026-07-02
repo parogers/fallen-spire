@@ -2,10 +2,10 @@
 import * as PIXI from 'pixi.js';
 
 import { Level, CAMERA_WIDTH, CAMERA_HEIGHT } from './level';
-import { loadLevel } from './level-loader';
+import { LevelManager } from './level-loader';
 import { Player } from './player';
 import { KeyboardControls } from './controls';
-import { Loader } from './loader';
+import { TILED_MAP_LOADER, Loader } from './loader';
 import { scaleToViewport } from '@parogers/pixijs-easygrid'
 
 
@@ -25,7 +25,8 @@ export class Game {
             this.autoResize();
         });
         await Loader.load();
-        this.level = await loadLevel(this.app.renderer, 'map.tmx');
+
+        this.level = await new LevelManager().loadLevel(this.app.renderer, 'start');
         this.controls = new KeyboardControls();
 
         this.app.stage.addChild(this.level.stage);
@@ -67,6 +68,7 @@ export class Game {
         }
         this.controls = null;
         this.app = null;
+        PIXI.extensions.remove(TILED_MAP_LOADER);
     }
 
     update(time) {
