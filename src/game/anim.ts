@@ -42,6 +42,9 @@ export class Animation extends BaseAnimation {
         }
         super();
         this.frames = getFrames();
+        if (this.frames.length === 0) {
+            console.error('no animation found for: ', params);
+        }
         this.fps = params.fps ?? 1;
         this.looping = params.looping ?? true;
         this.frame = 0;

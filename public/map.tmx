@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="100" height="20" tilewidth="8" tileheight="8" infinite="0" nextlayerid="13" nextobjectid="26">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="100" height="20" tilewidth="8" tileheight="8" infinite="0" nextlayerid="14" nextobjectid="26">
  <tileset firstgid="1" source="tiles.tsx"/>
  <group id="10" name="house">
   <objectgroup id="12" name="entities">
-   <object id="25" name="door-wooden" type="door" gid="14" x="71.8182" y="64.1364" width="8" height="15">
+   <object id="25" name="door-outline" type="door" gid="14" x="71.8182" y="64.1364" width="8" height="15">
     <properties>
      <property name="level" value="start"/>
     </properties>
@@ -34,7 +34,7 @@
 </data>
   </layer>
  </group>
- <group id="8" name="start">
+ <group id="8" name="start" visible="0">
   <layer id="6" name="background" width="100" height="20">
    <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

@@ -81,7 +81,7 @@ export class Game {
             this.level.addThing(this.player);
             this.app.stage.removeChildren();
             this.app.stage.addChild(this.level.stage);
-            this.level.update();
+            this.level.update(0);
         }
     }
 }

@@ -22,6 +22,13 @@ export enum LevelEvent {
 }
 
 
+enum LevelState {
+    Playing,
+    Entering,
+    Leaving,
+}
+
+
 export type LevelParams = {
     grid: StackedGrid;
     entities: Entity[];
@@ -87,6 +94,9 @@ export class Level {
         );
         this.stage.addChild(this.messageArea.stage);
         this.targetLevel = null;
+        this.state = LevelState.Entering;
+        this.curtain = new PIXI.Graphics().rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT).fill({ color: 0 });
+        this.stage.addChild(this.curtain);
         spawn(this);
     }
 
@@ -141,19 +151,35 @@ export class Level {
     }
 
     update(dt: number) {
-        this.messageArea.update(dt);
-        this.updaters.values().forEach(thing => {
-            if (thing.update) {
-                thing.update(dt);
+        if (this.state === LevelState.Playing || this.state === LevelState.Entering) {
+            this.messageArea.update(dt);
+            this.updaters.values().forEach(thing => {
+                if (thing.update) {
+                    thing.update(dt);
+                }
+            });
+            this.camera.updateViewport(dt);
+            this.grid.update(dt);
+            if (this.targetLevel) {
+                this.state = LevelState.Leaving;
+                return;
             }
-        });
-        this.camera.updateViewport(dt);
-        this.grid.update(dt);
-        if (this.targetLevel) {
-            return {
-                type: LevelEvent.ChangeLevel,
-                level: this.targetLevel,
-            };
+        }
+        if (this.state === LevelState.Entering) {
+            this.camera.updateViewport(dt);
+            this.grid.update(dt);
+            this.curtain.alpha -= 4*dt;
+            if (this.curtain.alpha <= 0) {
+                this.state = LevelState.Playing;
+            }
+        } else if (this.state === LevelState.Leaving) {
+            this.curtain.alpha += 4*dt;
+            if (this.curtain.alpha >= 1) {
+                return {
+                    type: LevelEvent.ChangeLevel,
+                    level: this.targetLevel,
+                };
+            }
         }
     }
 

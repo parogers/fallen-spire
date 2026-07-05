@@ -32,6 +32,12 @@ export class Door extends Thing {
         this.closeAnim = this.openAnim.getReversed();
         this.z = -1;
         this.state = DoorState.Closed;
+        this.interactRect = new PIXI.Rectangle(
+            0,
+            -this.sprite.height,
+            this.sprite.width,
+            this.sprite.height
+        );
     }
 
     update(dt: number) {

@@ -54,6 +54,9 @@ export class Thing {
 
     set texture(name: string) {
         if (this._texture !== name) {
+            if (name === null) {
+                console.warn('thing texture set to null:', this);
+            }
             this._texture = name;
             const anchor = Loader.shared.getAnchor(name);
             this.sprite.texture = PIXI.Assets.cache.get(name);

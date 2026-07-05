@@ -233,7 +233,12 @@ export class Player extends Thing {
                     } else if (this.controls.jump.pressed) {
                         this.startJump();
                     } else if (this.controls.up.pressed) {
-                        const thing = this.level.findThing(thing => thing.playerInteract && thing.getDistanceTo(this) < 5);
+                        const thing = this.level.findThing(
+                            thing =>
+                                thing.playerInteract &&
+                                thing.interactRect &&
+                                thing.interactRect.contains(this.x - thing.x, this.y - thing.y)
+                        );
                         if (thing) {
                             thing.playerInteract();
                         } else {
