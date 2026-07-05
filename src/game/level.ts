@@ -17,10 +17,13 @@ export const CAMERA_WIDTH = 200;
 export const CAMERA_HEIGHT = 120;
 
 
+export enum LevelEvent {
+    ChangeLevel='change-level',
+}
+
 
 export type LevelParams = {
-    grid: Grid;
-    // background?: Grid;
+    grid: StackedGrid;
     entities: Entity[];
 }
 
@@ -36,6 +39,7 @@ class Camera
         this.level = level;
         this.offset = 0;
         this.tracking = null;
+        this.firstUpdate = true;
     }
 
     updateViewport(dt: number) {
@@ -46,7 +50,7 @@ class Camera
             const offset = this.offset + CAMERA_OFFSET_SPEED*this.tracking.facing*dt;
             this.offset = Math.min(Math.abs(offset), CAMERA_OFFSET_MAX)*Math.sign(offset);
         }
-        const w = CAMERA_SMOOTHING_WEIGHT;
+        const w = this.firstUpdate ? 0 : CAMERA_SMOOTHING_WEIGHT;
         const trackX = this.tracking.x + this.offset;
         const trackY = this.tracking.y;
         viewport.x = w*viewport.x + (1-w)*clamp(
@@ -59,6 +63,7 @@ class Camera
             0,
             this.level.height - viewport.height
         );
+        this.firstUpdate = false;
     }
 }
 
@@ -81,6 +86,7 @@ export class Level {
             CAMERA_HEIGHT
         );
         this.stage.addChild(this.messageArea.stage);
+        this.targetLevel = null;
         spawn(this);
     }
 
@@ -135,14 +141,20 @@ export class Level {
     }
 
     update(dt: number) {
-        this.camera.updateViewport(dt);
         this.messageArea.update(dt);
-        this.grid.update(dt);
         this.updaters.values().forEach(thing => {
             if (thing.update) {
                 thing.update(dt);
             }
         });
+        this.camera.updateViewport(dt);
+        this.grid.update(dt);
+        if (this.targetLevel) {
+            return {
+                type: LevelEvent.ChangeLevel,
+                level: this.targetLevel,
+            };
+        }
     }
 
     getSolidAt(x: number, y: number): boolean {
@@ -161,6 +173,14 @@ export class Level {
         this.messageArea.show({
             text: msg,
         });
+    }
+
+    findThing(func: (thing: Thing) => boolean): Thing|null {
+        return this.things.values().find(func) ?? null;
+    }
+
+    triggerLevelChange(level: string) {
+        this.targetLevel = level;
     }
 }
 
@@ -196,7 +216,9 @@ export function spawn(level: Level)
         } else if (entity.type === 'door') {
             const x = entity.x-0.5;
             const y = Math.round(entity.y / level.tileHeight)*level.tileHeight;
-            const door = new Door(entity.name);
+            const door = new Door(entity.name, {
+                level: entity.properties['level'],
+            });
             door.x = x;
             door.y = y;
             level.addThing(door);

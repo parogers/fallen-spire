@@ -51,6 +51,17 @@ export class Animation extends BaseAnimation {
         return !this.looping && (this.frame|0) >= this.frames.length;
     }
 
+    get first(): string|null {
+        return this.frames?.[0] ?? null;
+    }
+
+    get last(): string|null {
+        if (this.frames.length) {
+            return this.frames[this.frames.length-1];
+        }
+        return null;
+    }
+
     update(dt) {
         this.frame += this.fps*dt;
         let frameNum = this.frame|0;
@@ -60,6 +71,14 @@ export class Animation extends BaseAnimation {
             frameNum = Math.min(frameNum, this.frames.length-1);
         }
         return this.frames[frameNum];
+    }
+
+    getReversed(): Animation {
+        return new Animation({
+            looping: this.looping,
+            fps: this.fps,
+            frames: this.frames.slice().reverse(),
+        });
     }
 }
 

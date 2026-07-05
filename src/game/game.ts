@@ -1,7 +1,7 @@
 
 import * as PIXI from 'pixi.js';
 
-import { Level, CAMERA_WIDTH, CAMERA_HEIGHT } from './level';
+import { Level, LevelEvent, CAMERA_WIDTH, CAMERA_HEIGHT } from './level';
 import { LevelManager } from './level-loader';
 import { Player } from './player';
 import { KeyboardControls } from './controls';
@@ -25,8 +25,9 @@ export class Game {
             this.autoResize();
         });
         await Loader.load();
+        this.levelMgr = new LevelManager(this.app.renderer);
 
-        this.level = await new LevelManager().loadLevel(this.app.renderer, 'start');
+        this.level = this.levelMgr.loadLevel('start');
         this.controls = new KeyboardControls();
 
         this.app.stage.addChild(this.level.stage);
@@ -34,10 +35,10 @@ export class Game {
 
         const spawn = this.level.findEntity('spawn');
         const player = new Player(controls);
-        player.level = this.level;
         player.x = spawn.x + spawn.width/2;
         player.y = spawn.y;
         player.facing = spawn.facing;
+        this.player = player;
         this.level.addThing(player);
         this.callUpdate = time => this.update(time);
         PIXI.Ticker.shared.add(this.callUpdate);
@@ -74,6 +75,13 @@ export class Game {
     update(time) {
         const dt = Math.min(time.deltaMS/1000, 1/60.);
         this.controls.update(dt);
-        this.level.update(dt);
+        const event = this.level.update(dt);
+        if (event?.type === LevelEvent.ChangeLevel) {
+            this.level = this.levelMgr.loadLevel(event.level);
+            this.level.addThing(this.player);
+            this.app.stage.removeChildren();
+            this.app.stage.addChild(this.level.stage);
+            this.level.update();
+        }
     }
 }

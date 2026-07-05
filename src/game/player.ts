@@ -4,6 +4,7 @@ import * as PIXI from 'pixi.js';
 import { Thing, makeHitBox } from './thing';
 import { Controls } from './controls';
 import { Animation, AnimationGroup } from './anim';
+import { Door } from './door';
 
 const DEFAULT_WALK_SPEED = 40;
 const WALK_FRAMES_PER_PIXEL = 4/13;
@@ -229,9 +230,15 @@ export class Player extends Thing {
                     this.vely = 0;
                     if (this.controls.dx) {
                         this.state = PlayerState.Walking;
-                    } else if (this.controls.jump.pressed || this.controls.up.pressed) {
-                        this.velx = 0;
+                    } else if (this.controls.jump.pressed) {
                         this.startJump();
+                    } else if (this.controls.up.pressed) {
+                        const thing = this.level.findThing(thing => thing.playerInteract && thing.getDistanceTo(this) < 5);
+                        if (thing) {
+                            thing.playerInteract();
+                        } else {
+                            this.startJump();
+                        }
                     }
                 }
                 break;

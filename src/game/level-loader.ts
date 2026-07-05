@@ -56,7 +56,7 @@ function getMidgroundGrid(map, renderer, tileNamePrefix: string): Grid|null {
 }
 
 
-export async function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
+export function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
 {
     const tileNamePrefix = 'tiles-';
     const stacked = new StackedGrid();
@@ -78,8 +78,9 @@ export async function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
 export class LevelManager {
     tiledMapsByName = new Map();
 
-    constructor()
+    constructor(renderer: PIXI.Renderer)
     {
+        this.renderer = renderer;
         for (let name of Loader.getAssetNames()) {
             if (!name.endsWith('.tmx')) {
                 continue;
@@ -94,11 +95,11 @@ export class LevelManager {
         }
     }
 
-    async loadLevel(renderer: PIXI.Renderer, name: string): Level|null {
+    loadLevel(name: string): Level|null {
         const map = this.tiledMapsByName.get(name);
         if (!map) {
             throw Error('cannot find map: ' + name);
         }
-        return await loadLevel(renderer, map);
+        return loadLevel(this.renderer, map);
     }
 }
