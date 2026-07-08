@@ -7,9 +7,12 @@ export type TiledLayer = any;
 
 export type TiledMap = {
     name: string;
+    offsetX: number;
+    offsetY: number;
     tilesets: Tileset[];
     layers: TiledLayer[];
     groups: TiledMap[];
+    properties: { [name: string]: any };
 }
 
 
@@ -84,9 +87,12 @@ function parseTiledMap(doc: Element): TiledMap {
     }
     const map = {
         name: doc.getAttribute('name') ?? '',
+        cols: doc.getAttribute('width'),
+        rows: doc.getAttribute('height'),
         tilesets: [],
         layers: [],
         groups: [],
+        properties: [],
     };
     Array.from(doc.children).forEach(child => {
         if (child.nodeName === 'tileset') {
@@ -123,10 +129,18 @@ function parseTiledMap(doc: Element): TiledMap {
         } else if (child.tagName === 'group') {
             const group = parseTiledMap(child);
             map.groups.push(group);
+        } else if (child.tagName === 'properties') {
+            map.properties = parseObjectProperties(child);
         }
     });
     return map;
 }
+
+
+function sliceGrid(grid: number[][], startRow: number, endRow: number, startCol: number, endCol: number) {
+    return grid.slice(startRow, endRow+1).map(row => row.slice(startCol, endCol+1));
+}
+
 
 export async function loadTiledMap(mapText: string): TiledMap {
     const data = new DOMParser().parseFromString(mapText, 'text/xml');
@@ -145,6 +159,45 @@ export async function loadTiledMap(mapText: string): TiledMap {
         } catch(error) {
             console.error('error parsing tileset: ' + tilesetRef.src);
             throw error;
+        }
+    }
+    for (let sub of map.groups) {
+        let startRow = map.rows;
+        let startCol = map.cols;
+        let endRow = 0;
+        let endCol = 0;
+        const marginTop = sub.properties['margin-top'] ?? 0;
+        const marginBottom = sub.properties['margin-bottom'] ?? 0;
+        for (let layer of sub.layers) {
+            if (layer.grid) {
+                for (let row = 0; row < map.rows; row++) {
+                    for (let col = 0; col < map.cols; col++) {
+                        if (layer.grid[row][col]) {
+                            startRow = Math.min(startRow, row);
+                            startCol = Math.min(startCol, col);
+                            endRow = Math.max(endRow, row);
+                            endCol = Math.max(endCol, col);
+                        }
+                    }
+                }
+            }
+        }
+        startRow = Math.max(startRow - marginTop, 0);
+        endRow = Math.min(endRow + marginBottom, map.rows-1);
+        const offsetX = startCol*map.tilesets[0].data.tileWidth;
+        const offsetY = startRow*map.tilesets[0].data.tileHeight;
+        sub.offsetX = offsetX;
+        sub.offsetY = offsetY;
+        for (let layer of sub.layers) {
+            if (layer.grid) {
+                layer.grid = sliceGrid(layer.grid, startRow, endRow, startCol, endCol);
+            }
+            if (layer.objects) {
+                for (let obj of layer.objects) {
+                    obj.x -= offsetX;
+                    obj.y -= offsetY;
+                }
+            }
         }
     }
     return map;

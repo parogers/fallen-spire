@@ -71,7 +71,7 @@ export function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
     stacked.addGrid(midground, 'midground');
     const mapEntityLayer = map.layers.find(layer => layer.name === 'entities');
     const entities = mapEntityLayer?.objects ?? [];
-    return new Level({ grid: stacked, entities });
+    return new Level({ grid: stacked, entities, offsetX: map.offsetX, offsetY: map.offsetY });
 }
 
 

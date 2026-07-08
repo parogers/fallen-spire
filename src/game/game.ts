@@ -77,7 +77,14 @@ export class Game {
         this.controls.update(dt);
         const event = this.level.update(dt);
         if (event?.type === LevelEvent.ChangeLevel) {
+            // Attempt to preserve the player coordinates as they move between
+            // maps. (ie shifts that have been caused by shrink-wrapping maps
+            // that share the same grid size)
+            this.player.x += this.level.offsetX;
+            this.player.y += this.level.offsetY;
             this.level = this.levelMgr.loadLevel(event.level);
+            this.player.x -= this.level.offsetX;
+            this.player.y -= this.level.offsetY;
             this.level.addThing(this.player);
             this.app.stage.removeChildren();
             this.app.stage.addChild(this.level.stage);

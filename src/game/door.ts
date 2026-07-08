@@ -21,7 +21,7 @@ export type DoorParams = {
 export class Door extends Thing {
     constructor(textureBase: string, params: DoorParams) {
         super();
-        this.targetLevel = params.level;
+        this.target = params.level;
         this.sprite = new PIXI.Sprite();
         this.openAnim = new Animation({
             frames: textureBase + '-*',
@@ -32,12 +32,7 @@ export class Door extends Thing {
         this.closeAnim = this.openAnim.getReversed();
         this.z = -1;
         this.state = DoorState.Closed;
-        this.interactRect = new PIXI.Rectangle(
-            0,
-            -this.sprite.height,
-            this.sprite.width,
-            this.sprite.height
-        );
+        this.interactRect = new PIXI.Rectangle(0, -16, 8, 16);
     }
 
     update(dt: number) {
@@ -54,7 +49,7 @@ export class Door extends Thing {
                 this.texture = this.openAnim.update(dt);
                 if (this.openAnim.isDone) {
                     this.state = DoorState.Open;
-                    this.level.triggerLevelChange(this.targetLevel);
+                    this.level.triggerLevelChange(this.target);
                 }
                 break;
 

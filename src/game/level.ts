@@ -7,7 +7,7 @@ import { Player } from './player';
 import { Rat } from './rat';
 import { Zombie } from './zombie';
 import { MessageArea } from './message';
-import { Door } from './door';
+import { Door, type DoorParams } from './door';
 
 const GRAVITY = 600;
 const CAMERA_SMOOTHING_WEIGHT = 0.8;
@@ -32,6 +32,8 @@ enum LevelState {
 export type LevelParams = {
     grid: StackedGrid;
     entities: Entity[];
+    offsetX?: number;
+    offsetY?: number;
 }
 
 
@@ -60,16 +62,24 @@ class Camera
         const w = this.firstUpdate ? 0 : CAMERA_SMOOTHING_WEIGHT;
         const trackX = this.tracking.x + this.offset;
         const trackY = this.tracking.y;
-        viewport.x = w*viewport.x + (1-w)*clamp(
-            trackX - viewport.width/2,
-            0,
-            this.level.width - viewport.width
-        );
-        viewport.y = w*viewport.y + (1-w)*clamp(
-            trackY - viewport.height/2,
-            0,
-            this.level.height - viewport.height
-        );
+        if (this.level.width < viewport.width) {
+            viewport.x = -(viewport.width/2 - this.level.width/2);
+        } else {
+            viewport.x = w*viewport.x + (1-w)*clamp(
+                trackX - viewport.width/2,
+                0,
+                this.level.width - viewport.width
+            );
+        }
+        if (this.level.height < viewport.height) {
+            viewport.y = -(viewport.height/2 - this.level.height/2);
+        } else {
+            viewport.y = w*viewport.y + (1-w)*clamp(
+                trackY - viewport.height/2,
+                0,
+                this.level.height - viewport.height
+            );
+        }
         this.firstUpdate = false;
     }
 }
@@ -94,6 +104,8 @@ export class Level {
         );
         this.stage.addChild(this.messageArea.stage);
         this.targetLevel = null;
+        this.offsetX = params.offsetX ?? 0;
+        this.offsetY = params.offsetY ?? 0;
         this.state = LevelState.Entering;
         this.curtain = new PIXI.Graphics().rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT).fill({ color: 0 });
         this.stage.addChild(this.curtain);
