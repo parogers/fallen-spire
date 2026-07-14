@@ -11,6 +11,11 @@ import { Level } from './level';
 import { Loader } from './loader';
 
 
+function makeGrid(rows: number, cols: number): number[][] {
+    return new Array(rows).fill(0).map(() => new Array(cols).fill(null));
+}
+
+
 function mapGridToTiles(grid: number[][], tileNamePrefix: string): string[][] {
     return grid.map(row => {
         return row.map(value => {
@@ -56,6 +61,23 @@ function getMidgroundGrid(map, renderer, tileNamePrefix: string): Grid|null {
 }
 
 
+function makeFadedGrid(rows: number, cols: number): Grid {
+    const faded = makeGrid(rows, cols);
+    for (let r = 0; r < rows; r++) {
+        faded[r][0] = 'tiles-05';
+        faded[r][cols-1] = 'tiles-12';
+    }
+    faded[0][1] = 'tiles-12';
+    const grid = new Grid({
+        tiles: faded,
+    });
+    // grid.parallaxScrollX = 0;
+    // grid.parallaxScrollY = 0;
+    return grid;
+}
+
+
+
 export function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
 {
     const tileNamePrefix = 'tiles-';
@@ -69,9 +91,16 @@ export function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
         stacked.addGrid(bg, 'background');
     }
     stacked.addGrid(midground, 'midground');
+    stacked.addGrid(makeFadedGrid(midground.rows, midground.cols));
     const mapEntityLayer = map.layers.find(layer => layer.name === 'entities');
     const entities = mapEntityLayer?.objects ?? [];
-    return new Level({ grid: stacked, entities, offsetX: map.offsetX, offsetY: map.offsetY });
+    return new Level({
+        grid: stacked,
+        entities,
+        offsetX: map.offsetX,
+        offsetY: map.offsetY,
+        darkness: map.properties['darkness'] ?? false,
+    });
 }
 
 

@@ -1,6 +1,7 @@
 
 import * as PIXI from 'pixi.js';
 
+import { Animation } from './anim';
 import { Thing } from './thing';
 import { Scenery } from './scenery';
 import { Player } from './player';
@@ -8,6 +9,7 @@ import { Rat } from './rat';
 import { Zombie } from './zombie';
 import { MessageArea } from './message';
 import { Door, type DoorParams } from './door';
+import { getRenderer } from './renderer';
 
 const GRAVITY = 600;
 const CAMERA_SMOOTHING_WEIGHT = 0.8;
@@ -34,11 +36,61 @@ export type LevelParams = {
     entities: Entity[];
     offsetX?: number;
     offsetY?: number;
+    darkness?: boolean;
 }
 
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
+}
+
+
+function renderDarkness(radius: number, blur: number=2)
+{
+    const width = CAMERA_WIDTH*2;
+    const height = CAMERA_HEIGHT*2;
+    const renderTexture = PIXI.RenderTexture.create({ width, height });
+    let graphics = new PIXI.Graphics();
+    const centerX = width/2;
+    const centerY = height/2;
+
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            const dx = x - centerX;
+            const dy = y - centerY;
+            const check = (dx**2 + 1.5*dy**2) ** 0.5;
+            if (
+                check > radius ||
+                check >= radius-blur && Math.abs(dx) % 2 === Math.abs(dy) % 2
+            ) {
+                graphics = graphics.rect(x, y, 1, 1);
+            }
+        }
+    }
+    graphics = graphics.fill({ color: '#000000' });
+    getRenderer().render({ container: graphics, target: renderTexture });
+    return renderTexture;
+}
+
+
+class Darkness extends Thing {
+    constructor() {
+        super();
+        this.sprite = new PIXI.Sprite();
+        this.sprite.anchor.set(0.5);
+        this.z = 1000;
+        this.anim = new Animation({
+            frames: [
+                renderDarkness(32),
+                renderDarkness(31.5),
+            ],
+            fps: 10,
+        });
+    }
+
+    update(dt: number) {
+        this.sprite.texture = this.anim.update(dt);
+    }
 }
 
 
@@ -49,12 +101,14 @@ class Camera
         this.offset = 0;
         this.tracking = null;
         this.firstUpdate = true;
+        this.width = CAMERA_WIDTH;
+        this.height = CAMERA_HEIGHT;
     }
 
     updateViewport(dt: number) {
         const viewport = this.level.grid.viewport;
-        viewport.width = CAMERA_WIDTH;
-        viewport.height = CAMERA_HEIGHT;
+        viewport.width = this.width;
+        viewport.height = this.height;
         if (this.tracking.velx) {
             const offset = this.offset + CAMERA_OFFSET_SPEED*this.tracking.facing*dt;
             this.offset = Math.min(Math.abs(offset), CAMERA_OFFSET_MAX)*Math.sign(offset);
@@ -86,6 +140,8 @@ class Camera
 
 
 export class Level {
+    darkness: PIXI.Sprite|null = null;
+
     constructor(params: LevelParams) {
         this.grid = params.grid;
         this.entities = params.entities;
@@ -109,6 +165,10 @@ export class Level {
         this.state = LevelState.Entering;
         this.curtain = new PIXI.Graphics().rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT).fill({ color: 0 });
         this.stage.addChild(this.curtain);
+        if (params.darkness) {
+            this.darkness = new Darkness();
+            this.addThing(this.darkness);
+        }
         spawn(this);
     }
 
@@ -172,6 +232,10 @@ export class Level {
             });
             this.camera.updateViewport(dt);
             this.grid.update(dt);
+            if (this.player && this.darkness) {
+                this.darkness.x = this.player.x - 2;
+                this.darkness.y = this.player.y - 4;
+            }
             if (this.targetLevel) {
                 this.state = LevelState.Leaving;
                 return;

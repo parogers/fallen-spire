@@ -7,6 +7,7 @@ import { Player } from './player';
 import { KeyboardControls } from './controls';
 import { TILED_MAP_LOADER, Loader } from './loader';
 import { scaleToViewport } from '@parogers/pixijs-easygrid'
+import { setRenderer } from './renderer';
 
 
 export class Game {
@@ -24,6 +25,7 @@ export class Game {
         this.app.renderer.on('resize', () => {
             this.autoResize();
         });
+        setRenderer(this.app.renderer);
         await Loader.load();
         this.levelMgr = new LevelManager(this.app.renderer);
 
@@ -73,7 +75,7 @@ export class Game {
     }
 
     update(time) {
-        const dt = Math.min(time.deltaMS/1000, 1/60.);
+        const dt = Math.min(time.deltaMS/1000, 2/60.);
         this.controls.update(dt);
         const event = this.level.update(dt);
         if (event?.type === LevelEvent.ChangeLevel) {
