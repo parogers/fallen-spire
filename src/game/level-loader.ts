@@ -71,11 +71,8 @@ function makeFadedGrid(rows: number, cols: number): Grid {
     const grid = new Grid({
         tiles: faded,
     });
-    // grid.parallaxScrollX = 0;
-    // grid.parallaxScrollY = 0;
     return grid;
 }
-
 
 
 export function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
@@ -91,7 +88,9 @@ export function loadLevel(renderer: PIXI.Renderer, map: TiledMap): Level
         stacked.addGrid(bg, 'background');
     }
     stacked.addGrid(midground, 'midground');
-    stacked.addGrid(makeFadedGrid(midground.rows, midground.cols));
+    if (map.properties['faded-edges']) {
+        stacked.addGrid(makeFadedGrid(midground.rows, midground.cols));
+    }
     const mapEntityLayer = map.layers.find(layer => layer.name === 'entities');
     const entities = mapEntityLayer?.objects ?? [];
     return new Level({

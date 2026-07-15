@@ -40,6 +40,12 @@ export type LevelParams = {
 }
 
 
+export type DarkRegion = {
+    rect: PIXI.Rectangle;
+    light: number;
+}
+
+
 function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
 }
@@ -74,15 +80,15 @@ function renderDarkness(radius: number, blur: number=2)
 
 
 class Darkness extends Thing {
-    constructor() {
+    constructor(radius: number) {
         super();
         this.sprite = new PIXI.Sprite();
         this.sprite.anchor.set(0.5);
         this.z = 1000;
         this.anim = new Animation({
             frames: [
-                renderDarkness(32),
-                renderDarkness(31.5),
+                renderDarkness(radius),
+                renderDarkness(radius - 0.5),
             ],
             fps: 10,
         });
@@ -139,8 +145,19 @@ class Camera
 }
 
 
+function findDarkRegions(entities: Entity[]): DarkRegion[] {
+    return entities.filter(e => e.name === 'darkness').map(e => {
+        return {
+            rect: new PIXI.Rectangle(e.x, e.y, e.width, e.height),
+            light: e.properties['light'] ?? 32,
+        }
+    })
+}
+
+
 export class Level {
     darkness: PIXI.Sprite|null = null;
+    inDark: DarkRegion|null = null;
 
     constructor(params: LevelParams) {
         this.grid = params.grid;
@@ -165,11 +182,23 @@ export class Level {
         this.state = LevelState.Entering;
         this.curtain = new PIXI.Graphics().rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT).fill({ color: 0 });
         this.stage.addChild(this.curtain);
+        this.darkRegions = findDarkRegions(params.entities);
         if (params.darkness) {
-            this.darkness = new Darkness();
-            this.addThing(this.darkness);
+            this.darkRegions.push({
+                rect: new PIXI.Rectangle(0, 0, this.width, this.height),
+                light: params.darkness,
+            })
         }
         spawn(this);
+    }
+
+    checkInDark(x: number, y: number): DarkRegion|undefined {
+        if (this.inDark && this.inDark.rect.contains(x, y)) {
+            return this.inDark;
+        }
+        const region = this.darkRegions.find(region => region.rect.contains(x, y));
+        this.inDark = region;
+        return region;
     }
 
     get width(): number {
@@ -232,9 +261,19 @@ export class Level {
             });
             this.camera.updateViewport(dt);
             this.grid.update(dt);
+            if (this.player) {
+                const inDark = this.checkInDark(this.player.x, this.player.y);
+                if (inDark && !this.darkness) {
+                    this.darkness = new Darkness(inDark.light);
+                    this.addThing(this.darkness);
+                } else if (!inDark && this.darkness) {
+                    this.removeThing(this.darkness);
+                    this.darkness = null;
+                }
+            }
             if (this.player && this.darkness) {
-                this.darkness.x = this.player.x - 2;
-                this.darkness.y = this.player.y - 4;
+                this.darkness.x = this.player.x;
+                this.darkness.y = this.player.y - 8;
             }
             if (this.targetLevel) {
                 this.state = LevelState.Leaving;
@@ -285,6 +324,7 @@ export class Level {
         this.targetLevel = level;
     }
 }
+
 
 export function spawn(level: Level)
 {
